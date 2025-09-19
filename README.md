@@ -14,11 +14,46 @@ A fast, self-contained CLI tool for detecting file corruption (bitrot) using has
 
 ## Installation
 
+### Download Pre-built Binaries (Recommended)
+
+Download the latest release for your platform from the [Releases page](https://github.com/alanbarber/bitcheck/releases):
+
+- **Windows**: `bitcheck-win-x64.exe`
+- **Linux**: `bitcheck-linux-x64`
+- **macOS (Intel)**: `bitcheck-osx-x64`
+- **macOS (Apple Silicon)**: `bitcheck-osx-arm64`
+
+On Linux/macOS, make the file executable:
+```bash
+chmod +x bitcheck-linux-x64
+# or
+chmod +x bitcheck-osx-x64
+# or
+chmod +x bitcheck-osx-arm64
+```
+
+### Build from Source
+
 ```bash
 dotnet build -c Release
 ```
 
 The executable will be in `BitCheck/bin/Release/net9.0/`
+
+To build a self-contained executable for your platform:
+```bash
+# Windows
+dotnet publish src/BitCheck/BitCheck.csproj -c Release -r win-x64 --self-contained
+
+# Linux
+dotnet publish src/BitCheck/BitCheck.csproj -c Release -r linux-x64 --self-contained
+
+# macOS (Intel)
+dotnet publish src/BitCheck/BitCheck.csproj -c Release -r osx-x64 --self-contained
+
+# macOS (Apple Silicon)
+dotnet publish src/BitCheck/BitCheck.csproj -c Release -r osx-arm64 --self-contained
+```
 
 ## Usage
 
