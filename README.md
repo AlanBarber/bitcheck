@@ -288,6 +288,21 @@ Each entry contains:
 - **Database**: JSON with in-memory Dictionary cache
 - **Concurrency**: Thread-safe with lock-based synchronization
 - **Platform**: Cross-platform (.NET 9.0)
+- **Testing**: 29+ unit tests with MSTest framework
+
+## Testing
+
+Run the test suite:
+```bash
+dotnet test src/BitCheck.sln
+```
+
+The project includes comprehensive unit tests covering:
+- Database operations (CRUD, persistence, caching)
+- File hashing (XXHash64 consistency and accuracy)
+- Data models and validation
+
+See [Testing Guide](docs/TESTING.md) for detailed information.
 
 ## Example Automation
 
@@ -319,6 +334,8 @@ fi
 For detailed documentation, see the [`docs/`](docs/) folder:
 
 - [Build Instructions](docs/BUILD_INSTRUCTIONS.md) - How to build and deploy
+- [Release Process](docs/RELEASE_PROCESS.md) - Creating GitHub releases
+- [Testing Guide](docs/TESTING.md) - Running and writing tests
 - [Usage Examples](docs/USAGE_EXAMPLES.md) - Detailed usage scenarios
 - [Operation Logic](docs/OPERATION_LOGIC.md) - How operations work together
 - [Timestamp Logic](docs/TIMESTAMP_LOGIC.md) - How dates are tracked
