@@ -13,6 +13,8 @@ namespace BitCheck
         private static int _filesChecked = 0;
         private static int _filesMismatched = 0;
         private static int _filesSkipped = 0;
+        private static int _filesMissing = 0;
+        private static int _filesRemoved = 0;
 
         static int Main(string[] args)
         {
@@ -88,13 +90,28 @@ namespace BitCheck
                     Console.WriteLine($"Files checked: {_filesChecked}");
                     Console.WriteLine($"Mismatches: {_filesMismatched}");
                 }
+                if (_filesMissing > 0)
+                {
+                    Console.WriteLine($"Files missing: {_filesMissing}");
+                }
+                if (_filesRemoved > 0)
+                {
+                    Console.WriteLine($"Files removed from database: {_filesRemoved}");
+                }
                 Console.WriteLine($"Files skipped: {_filesSkipped}");
                 Console.WriteLine($"Time elapsed: {elapsed.TotalSeconds:F2}s");
 
-                if (_filesMismatched > 0)
+                if (_filesMismatched > 0 || _filesMissing > 0)
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"WARNING: {_filesMismatched} file(s) failed integrity check!");
+                    if (_filesMismatched > 0)
+                    {
+                        Console.WriteLine($"WARNING: {_filesMismatched} file(s) failed integrity check!");
+                    }
+                    if (_filesMissing > 0 && _filesRemoved == 0)
+                    {
+                        Console.WriteLine($"WARNING: {_filesMissing} file(s) are missing! Use --update to remove them from the database.");
+                    }
                 }
             }
             catch (Exception ex)
@@ -115,9 +132,9 @@ namespace BitCheck
 
             using var db = new DatabaseService(dbPath);
 
-            // Get all files in current directory (excluding the database file)
+            // Get all files in current directory (excluding hidden files and database file)
             var files = Directory.GetFiles(fullPath)
-                .Where(f => Path.GetFileName(f) != DatabaseFileName)
+                .Where(f => !ShouldSkipFile(f))
                 .ToArray();
 
             foreach (var filePath in files)
@@ -125,13 +142,21 @@ namespace BitCheck
                 ProcessFile(db, filePath, add, update, check, verbose);
             }
 
+            // Check for missing files (files in database but not on disk)
+            if (check || update)
+            {
+                CheckForMissingFiles(db, fullPath, files, update, verbose);
+            }
+
             // Flush changes for this directory
             db.Flush();
 
-            // Process subdirectories if recursive
+            // Process subdirectories if recursive (excluding hidden directories)
             if (recursive)
             {
-                var subdirectories = Directory.GetDirectories(fullPath);
+                var subdirectories = Directory.GetDirectories(fullPath)
+                    .Where(d => !IsHidden(d))
+                    .ToArray();
                 foreach (var subdir in subdirectories)
                 {
                     ProcessDirectory(subdir, add, update, check, verbose, recursive);
@@ -144,6 +169,18 @@ namespace BitCheck
             try
             {
                 var fileName = Path.GetFileName(filePath);
+                
+                // Pre-validate file access
+                if (!CanReadFile(filePath, out string? errorReason))
+                {
+                    if (verbose)
+                    {
+                        Console.WriteLine($"[SKIP] {fileName} - {errorReason}");
+                    }
+                    _filesSkipped++;
+                    return;
+                }
+                
                 var currentHash = ComputeHash(filePath);
                 
                 if (currentHash == null)
@@ -244,6 +281,22 @@ namespace BitCheck
                     }
                 }
             }
+            catch (UnauthorizedAccessException)
+            {
+                if (verbose)
+                {
+                    Console.WriteLine($"[SKIP] {Path.GetFileName(filePath)} - Access denied");
+                }
+                _filesSkipped++;
+            }
+            catch (IOException ex)
+            {
+                if (verbose)
+                {
+                    Console.WriteLine($"[SKIP] {Path.GetFileName(filePath)} - I/O error: {ex.Message}");
+                }
+                _filesSkipped++;
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"[ERROR] {Path.GetFileName(filePath)} - {ex.Message}");
@@ -251,6 +304,164 @@ namespace BitCheck
             }
         }
 
+        /// <summary>
+        /// Checks for files that exist in the database but are missing from the directory.
+        /// Reports missing files during check operations and removes them during update operations.
+        /// </summary>
+        /// <param name="db">The database service</param>
+        /// <param name="directoryPath">The directory being processed</param>
+        /// <param name="existingFiles">Array of files currently in the directory</param>
+        /// <param name="removeFromDatabase">Whether to remove missing files from the database (update mode)</param>
+        /// <param name="verbose">Whether to show verbose output</param>
+        static void CheckForMissingFiles(IDatabaseService db, string directoryPath, string[] existingFiles, bool removeFromDatabase, bool verbose)
+        {
+            // Get all entries from the database
+            var allEntries = db.GetAllEntries().ToList();
+            
+            // Create a set of existing filenames for fast lookup
+            var existingFileNames = new HashSet<string>(
+                existingFiles.Select(f => Path.GetFileName(f)),
+                StringComparer.OrdinalIgnoreCase
+            );
+            
+            // Find entries that are in the database but not on disk
+            foreach (var entry in allEntries)
+            {
+                if (!existingFileNames.Contains(entry.FileName))
+                {
+                    _filesMissing++;
+                    
+                    if (removeFromDatabase)
+                    {
+                        // Update mode: remove from database
+                        db.DeleteFileEntry(entry.FileName);
+                        _filesRemoved++;
+                        Console.WriteLine($"[REMOVED] {entry.FileName} - File no longer exists");
+                    }
+                    else
+                    {
+                        // Check mode: just report
+                        Console.WriteLine($"[MISSING] {entry.FileName} - File not found in directory");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if a file can be read, performing pre-validation.
+        /// </summary>
+        /// <param name="filePath">Path to the file to check</param>
+        /// <param name="errorReason">Reason why the file cannot be read, if applicable</param>
+        /// <returns>True if the file can be read, false otherwise</returns>
+        static bool CanReadFile(string filePath, out string? errorReason)
+        {
+            errorReason = null;
+            
+            try
+            {
+                // Check if file exists
+                if (!File.Exists(filePath))
+                {
+                    errorReason = "File not found";
+                    return false;
+                }
+                
+                // Check if we can get file info (tests basic access)
+                var fileInfo = new FileInfo(filePath);
+                
+                // Check if file is empty (can still process, but worth noting)
+                if (fileInfo.Length == 0)
+                {
+                    // Empty files are allowed, just return true
+                    return true;
+                }
+                
+                // Try to open the file for reading to verify access
+                using (var testStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    // Successfully opened, can read
+                    return true;
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                errorReason = "Access denied";
+                return false;
+            }
+            catch (IOException ex)
+            {
+                errorReason = $"I/O error: {ex.Message}";
+                return false;
+            }
+            catch (Exception ex)
+            {
+                errorReason = $"Error: {ex.Message}";
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Determines if a file should be skipped (hidden or database file).
+        /// </summary>
+        static bool ShouldSkipFile(string filePath)
+        {
+            var fileName = Path.GetFileName(filePath);
+            
+            // Skip database file
+            if (fileName == DatabaseFileName)
+                return true;
+            
+            // Skip hidden files
+            if (IsHidden(filePath))
+                return true;
+            
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if a file or directory is hidden on any platform.
+        /// On Windows: checks the Hidden attribute.
+        /// On Unix/Linux/macOS: checks if the name starts with a dot.
+        /// </summary>
+        static bool IsHidden(string path)
+        {
+            try
+            {
+                var fileInfo = new FileInfo(path);
+                var dirInfo = new DirectoryInfo(path);
+                
+                // Check if it's a file or directory and if it exists
+                bool exists = fileInfo.Exists || dirInfo.Exists;
+                if (!exists)
+                    return false;
+                
+                // Unix/Linux/macOS: files/directories starting with '.' are hidden
+                var name = fileInfo.Exists ? fileInfo.Name : dirInfo.Name;
+                if (name.StartsWith("."))
+                    return true;
+                
+                // Windows: check the Hidden attribute
+                if (OperatingSystem.IsWindows())
+                {
+                    var attributes = fileInfo.Exists ? fileInfo.Attributes : dirInfo.Attributes;
+                    if ((attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+                        return true;
+                }
+                
+                return false;
+            }
+            catch
+            {
+                // If we can't determine, assume not hidden
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Computes the XXHash64 hash of a file.
+        /// </summary>
+        /// <param name="path">Path to the file</param>
+        /// <returns>Hex string of the hash, or null if computation failed</returns>
         static string? ComputeHash(string path)
         {
             try
@@ -262,8 +473,19 @@ namespace BitCheck
                 var hexHash = Convert.ToHexString(rawHash);
                 return hexHash;
             }
+            catch (UnauthorizedAccessException)
+            {
+                // Access denied - already handled in CanReadFile
+                return null;
+            }
+            catch (IOException)
+            {
+                // I/O error - already handled in CanReadFile
+                return null;
+            }
             catch (Exception)
             {
+                // Unexpected error during hash computation
                 return null;
             }
         }

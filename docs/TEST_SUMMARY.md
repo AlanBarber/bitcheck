@@ -2,15 +2,15 @@
 
 ## Overview
 
-Comprehensive unit test suite created for BitCheck with **29 passing tests** covering all core functionality.
+Comprehensive unit test suite created for BitCheck with **39 passing tests** covering all core functionality.
 
 ## Test Statistics
 
-- **Total Tests**: 29
+- **Total Tests**: 39
 - **Pass Rate**: 100%
-- **Test Files**: 3
+- **Test Files**: 4
 - **Framework**: MSTest (v3.1.1)
-- **Coverage Areas**: Database, Hashing, Data Models
+- **Coverage Areas**: Database, Hashing, Hidden File Filtering, Data Models
 
 ## Test Files Created
 
@@ -68,6 +68,29 @@ Tests for XXHash64 file hashing:
 
 **Error Handling**
 - ✅ Non-existent file exception
+
+### 4. HiddenFileFilterTests.cs (10 tests)
+Tests for hidden file and directory detection:
+
+**Platform Detection**
+- ✅ Dot files are hidden on all platforms
+- ✅ Dot directories are hidden on all platforms
+- ✅ Windows Hidden attribute detection
+
+**Database File**
+- ✅ Database file exclusion (.bitcheck.db)
+
+**Regular Files**
+- ✅ Regular files are not hidden
+- ✅ Regular directories are not hidden
+
+**Multiple Files**
+- ✅ Multiple hidden files detection
+- ✅ Mixed hidden and regular files
+- ✅ Nested hidden directories
+
+**Edge Cases**
+- ✅ Empty filename handling
 
 ## Project Updates
 
@@ -145,8 +168,8 @@ dotnet test --filter "FullyQualifiedName~DatabaseServiceTests"
 
 All tests pass successfully:
 ```
-Test summary: total: 29, failed: 0, succeeded: 29, skipped: 0
-Build succeeded in 8.7s
+Test summary: total: 39, failed: 0, succeeded: 39, skipped: 0
+Build succeeded in 2.9s
 ```
 
 ## Files Modified/Created
@@ -155,6 +178,7 @@ Build succeeded in 8.7s
 - `src/BitCheck.Tests/FileEntryTests.cs`
 - `src/BitCheck.Tests/DatabaseServiceTests.cs`
 - `src/BitCheck.Tests/HashUtilityTests.cs`
+- `src/BitCheck.Tests/HiddenFileFilterTests.cs`
 - `docs/TESTING.md`
 - `.github/workflows/test.yml`
 - `TEST_SUMMARY.md` (this file)

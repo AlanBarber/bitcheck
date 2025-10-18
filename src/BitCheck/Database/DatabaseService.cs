@@ -56,6 +56,19 @@ namespace BitCheck.Database
         }
 
         /// <summary>
+        /// Retrieves all file entries from the database.
+        /// </summary>
+        /// <returns>An enumerable collection of all FileEntry objects.</returns>
+        public IEnumerable<FileEntry> GetAllEntries()
+        {
+            lock (_lock)
+            {
+                EnsureCacheLoaded();
+                return _cache!.Values.ToList(); // Return a copy to avoid modification issues
+            }
+        }
+
+        /// <summary>
         /// Inserts a new file entry into the database.
         /// </summary>
         /// <param name="fileEntry">The file entry to insert.</param>

@@ -11,6 +11,8 @@ The test project is located at `src/BitCheck.Tests/` and uses MSTest as the test
 - **`FileEntryTests.cs`** - Tests for the `FileEntry` data model
 - **`DatabaseServiceTests.cs`** - Tests for database operations (CRUD, persistence, caching)
 - **`HashUtilityTests.cs`** - Tests for XXHash64 file hashing functionality
+- **`HiddenFileFilterTests.cs`** - Tests for hidden file and directory detection on all platforms
+- **`FileAccessTests.cs`** - Tests for file access validation and error handling
 
 ## Running Tests
 
@@ -89,6 +91,42 @@ dotnet test src/BitCheck.sln --filter "FullyQualifiedName~DatabaseService_Insert
   - Non-existent file exception
 - **Sensitivity**
   - Single byte change detection
+
+### Hidden File Filter Tests (10 tests)
+- **Platform Detection**
+  - Dot files are hidden on all platforms
+  - Dot directories are hidden on all platforms
+  - Windows Hidden attribute detection
+- **Database File**
+  - Database file exclusion (.bitcheck.db)
+- **Regular Files**
+  - Regular files are not hidden
+  - Regular directories are not hidden
+- **Multiple Files**
+  - Multiple hidden files detection
+  - Mixed hidden and regular files
+  - Nested hidden directories
+- **Edge Cases**
+  - Empty filename handling
+
+### File Access Tests (13 tests)
+- **Basic Access**
+  - Regular files can be read
+  - Empty files can be read
+  - Non-existent files detected
+- **File States**
+  - Read-only files can be read (Windows)
+  - Locked files handled gracefully
+  - Large files (10MB+) can be read
+- **File Types**
+  - Binary files can be read
+  - Files with special characters in names
+  - Files with Unicode content
+- **Advanced Scenarios**
+  - Multiple files with different states
+  - Files in nested directories
+  - Long path handling
+  - Multiple concurrent readers (shared read)
 
 ## Test Best Practices
 
