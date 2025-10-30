@@ -33,23 +33,14 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '9.0.100'
+          dotnet-quality: 'preview'
 
       - name: Restore dependencies
         run: dotnet restore src/BitCheck.sln
 
       - name: Build and Publish
-        run: |
-          dotnet publish src/BitCheck/BitCheck.csproj `
-            -c Release `
-            -r ${{ matrix.runtime }} `
-            --self-contained true `
-            -p:PublishSingleFile=true `
-            -p:PublishTrimmed=true `
-            -p:PublishReadyToRun=true `
-            -p:IncludeNativeLibrariesForSelfExtract=true `
-            -p:EnableCompressionInSingleFile=true `
-            -o publish/${{ matrix.runtime }}
+        run: dotnet publish src/BitCheck/BitCheck.csproj -c Release -r ${{ matrix.runtime }} --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:PublishReadyToRun=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o publish/${{ matrix.runtime }}
 
       - name: Rename executable (Windows)
         if: matrix.os == 'windows-latest'
