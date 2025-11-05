@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BitCheck": {
+      "commandName": "Project",
+      "workingDirectory": "S:\\test"
+    }
+  }
+}
