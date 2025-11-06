@@ -1,10 +1,15 @@
 # BitCheck - Data Integrity Monitor
 
-**Protect your data from silent corruption (bitrot) with automated file integrity monitoring.**
+[![GitHub Release](https://img.shields.io/github/v/release/alanbarber/bitcheck)](https://github.com/AlanBarber/bitcheck/releases)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/alanbarber/bitcheck/release.yml)](https://github.com/AlanBarber/bitcheck/actions/workflows/release.yml)
+[![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/alanbarber/bitcheck/total)](https://github.com/AlanBarber/bitcheck/releases)
+[![GitHub License](https://img.shields.io/github/license/alanbarber/bitcheck)](https://github.com/AlanBarber/bitcheck/blob/main/LICENSE)
 
-BitCheck is a fast, cross-platform CLI tool that detects file corruption by tracking file hashes over time. Perfect for protecting important documents, photos, backups, and archives from gradual data degradation.
+---
 
-**GitHub:** https://github.com/alanbarber/bitcheck
+**Monitor your data for silent corruption (bitrot) with automated file integrity checking.**
+
+BitCheck is a fast, cross-platform CLI tool that detects file corruption by tracking file hashes over time. Perfect for monitoring important documents, photos, backups, and archives for gradual data degradation.
 
 ## Why BitCheck?
 
@@ -34,7 +39,7 @@ Get the latest release for your platform from the [Releases page](https://github
 chmod +x bitcheck-linux-x64  # or bitcheck-osx-x64 or bitcheck-osx-arm64
 ```
 
-### 3. Start Protecting Your Files
+### 3. Start Monitoring Your Files
 
 ```bash
 # Add all files in current directory to database
@@ -70,7 +75,7 @@ BitCheck creates a `.bitcheck.db` file in each directory containing hash fingerp
 
 ## Usage Examples
 
-### Protect Your Files (First Time)
+### Monitor Your Files (First Time)
 
 ```bash
 # Add all files in current directory
@@ -328,10 +333,6 @@ The project includes 62+ comprehensive unit tests covering:
 - **Startup time**: Instant (lazy loading)
 - **Disk-bound**: Performance primarily limited by disk read speed, not CPU
 
-**Example: 10,000 files**
-- Processes thousands of files in seconds
-- Memory usage: ~1-2 MB
-
 ### Operation Logic
 
 **Add Mode (`--add`)**
@@ -368,16 +369,12 @@ The project includes 62+ comprehensive unit tests covering:
 
 ### Documentation
 
-Detailed documentation in the [`docs/`](docs/) folder:
+Additional documentation in the [`docs/`](docs/) folder:
 
-- [Build Instructions](docs/BUILD_INSTRUCTIONS.md) - How to build and deploy
+- [Build Instructions](docs/BUILD_INSTRUCTIONS.md) - How to build from source
 - [Release Process](docs/RELEASE_PROCESS.md) - Creating GitHub releases
 - [Testing Guide](docs/TESTING.md) - Running and writing tests
 - [Usage Examples](docs/USAGE_EXAMPLES.md) - Detailed usage scenarios
-- [Operation Logic](docs/OPERATION_LOGIC.md) - How operations work together
-- [Timestamp Logic](docs/TIMESTAMP_LOGIC.md) - How dates are tracked
-- [Performance Notes](docs/PERFORMANCE_NOTES.md) - Performance optimizations
-- [Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md) - Technical overview
 
 ### Contributing
 
