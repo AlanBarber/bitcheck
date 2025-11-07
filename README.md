@@ -16,6 +16,7 @@ BitCheck is a fast, cross-platform CLI tool that detects file corruption by trac
 - 🛡️ **Detect corruption early** - Find bitrot before it's too late
 - ⚡ **Lightning fast** - Processes thousands of files in seconds
 - 🎯 **Simple to use** - Just three commands: add, check, update
+- 🧠 **Smart checking** - Automatically distinguishes intentional edits from corruption
 - 🔒 **Safe & reliable** - Gracefully handles locked files and permission issues
 - 📁 **Per-directory tracking** - Each folder maintains its own database
 - 🌍 **Cross-platform** - Works on Windows, Linux, and macOS
@@ -55,6 +56,17 @@ That's it! BitCheck will create a `.bitcheck.db` file in each directory to track
 
 BitCheck creates a `.bitcheck.db` file in each directory containing hash fingerprints of your files. When you run a check, it recomputes the hashes and compares them to detect any changes or corruption.
 
+### Smart Check Mode (Default)
+
+BitCheck uses **smart checking** by default to distinguish between intentional file changes and corruption:
+
+- **Intentional changes**: If a file's hash changes AND its modification date changed, BitCheck treats it as an intentional edit and automatically updates the hash
+- **Corruption detected**: If a file's hash changes BUT its modification date is unchanged, BitCheck reports it as possible corruption (bitrot)
+
+This makes BitCheck practical for real-world use where files are frequently edited, while still catching true corruption.
+
+**Use `--strict` mode** if you want to report all hash mismatches as corruption, regardless of modification date.
+
 ### Basic Commands
 
 | Command | Purpose |
@@ -67,10 +79,11 @@ BitCheck creates a `.bitcheck.db` file in each directory containing hash fingerp
 ### Command Options
 
 - `-a, --add` - Add new files to the database
-- `-c, --check` - Check files against stored hashes
+- `-c, --check` - Check files against stored hashes (smart mode by default)
 - `-u, --update` - Update hashes for files that have changed
 - `-r, --recursive` - Process subdirectories
 - `-v, --verbose` - Show detailed output
+- `-s, --strict` - Strict mode: report all hash mismatches as corruption
 - `--help` - Show help information
 
 ## Usage Examples
@@ -126,7 +139,23 @@ Files skipped: 0
 Time elapsed: 0.12s
 ```
 
-**Output (corruption detected):**
+**Output (intentional file change - smart mode):**
+```
+BitCheck - Data Integrity Monitor
+Mode: Check 
+Recursive: False
+
+[UPDATED] document.pdf - File was modified (2025-11-07 04:36:26 UTC)
+
+=== Summary ===
+Files processed: 3
+Files checked: 3
+Mismatches: 0
+Files skipped: 0
+Time elapsed: 0.12s
+```
+
+**Output (corruption detected - modification date unchanged):**
 ```
 BitCheck - Data Integrity Monitor
 Mode: Check 
@@ -135,6 +164,8 @@ Recursive: False
 [MISMATCH] data.xlsx
   Expected: A1B2C3D4E5F6G7H8
   Got:      X9Y8Z7W6V5U4T3S2
+  File modification date unchanged: 2025-11-05 12:00:00 UTC
+  Possible corruption detected!
 
 === Summary ===
 Files processed: 3
@@ -146,35 +177,43 @@ Time elapsed: 0.12s
 WARNING: 1 file(s) failed integrity check!
 ```
 
-### Update After Intentional Changes
+### Strict Mode (Report All Changes as Corruption)
 
 ```bash
-# Check files and update hashes for mismatches
-bitcheck --check --update
+# Use strict mode to report all hash mismatches, even if file was modified
+bitcheck --check --strict
 
-# Useful after intentional file modifications
+# Useful for read-only media or when you want maximum sensitivity
 ```
 
 **Output:**
 ```
 BitCheck - Data Integrity Monitor
-Mode: Check Update 
+Mode: Check 
 Recursive: False
 
 [MISMATCH] document.pdf
   Expected: A1B2C3D4E5F6G7H8
   Got:      F1E2D3C4B5A69788
-  [UPDATED] Hash updated in database
+  Last successful check: 2025-11-07 04:36:31 UTC
 
 === Summary ===
 Files processed: 3
 Files checked: 3
 Mismatches: 1
-Files updated: 1
 Files skipped: 0
 Time elapsed: 0.13s
 
 WARNING: 1 file(s) failed integrity check!
+```
+
+### Manual Update (When Needed)
+
+```bash
+# Manually update hashes after checking
+bitcheck --check --update
+
+# Useful in strict mode or for batch updates
 ```
 
 ### Add New Files
@@ -256,9 +295,9 @@ bitcheck.exe --check --recursive
 ### Backup Verification Script
 ```bash
 #!/bin/bash
-# Verify backup integrity
+# Verify backup integrity (use --strict since backups shouldn't change)
 cd /backup/location
-bitcheck --check --recursive
+bitcheck --check --recursive --strict
 if [ $? -ne 0 ]; then
     echo "Backup integrity check FAILED!" | mail -s "Backup Alert" admin@example.com
 fi
@@ -272,8 +311,14 @@ A: Weekly or monthly checks are recommended for important data. Daily checks for
 **Q: What happens if corruption is detected?**  
 A: BitCheck reports the corrupted files. You should restore them from backups immediately.
 
+**Q: How does smart check mode work?**  
+A: By default, BitCheck distinguishes intentional file edits from corruption by checking the file's modification date. If the hash changes but the modification date also changed, it's treated as an intentional edit and auto-updated. If the hash changes but the modification date is unchanged, it's reported as possible corruption.
+
+**Q: When should I use strict mode?**  
+A: Use `--strict` for read-only media (like archived backups or media libraries) where files should never change, or when you want maximum sensitivity to any changes.
+
 **Q: Can I use this for backups?**  
-A: Yes! Run `bitcheck --add --recursive` after creating a backup, then check it regularly.
+A: Yes! Run `bitcheck --add --recursive` after creating a backup, then check it regularly. Use `--strict` mode for backup verification since backup files shouldn't change.
 
 **Q: Does it modify my files?**  
 A: No. BitCheck only reads files to compute hashes. It never modifies your data.

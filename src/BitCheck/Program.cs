@@ -30,6 +30,7 @@ namespace BitCheck
             var updateOption = new Option<bool>(new[] { "--update", "-u" }, "Update any existing hashes that do not match");
             var checkOption = new Option<bool>(new[] { "--check", "-c" }, "Check existing hashes match");
             var verboseOption = new Option<bool>(new[] { "--verbose", "-v" }, "Verbose output");
+            var strictOption = new Option<bool>(new[] { "--strict", "-s" }, "Strict mode: report all hash mismatches as corruption, even if file modification date changed");
 
             var rootCommand = new RootCommand()
             {
@@ -37,7 +38,8 @@ namespace BitCheck
                 addOption,
                 updateOption,
                 checkOption,
-                verboseOption
+                verboseOption,
+                strictOption
             };
             rootCommand.Description = @"
   ____  _ _    ____ _               _    
@@ -51,13 +53,13 @@ namespace BitCheck
 
  GitHub: https://github.com/alanbarber/bitcheck";
 
-            rootCommand.SetHandler<bool, bool, bool, bool, bool>(Run, recursiveOption, addOption, updateOption, checkOption, verboseOption);
+            rootCommand.SetHandler<bool, bool, bool, bool, bool, bool>(Run, recursiveOption, addOption, updateOption, checkOption, verboseOption, strictOption);
 
             // Parse the incoming args and invoke the handler
             return rootCommand.Invoke(args);
         }
 
-        static void Run(bool recursive, bool add, bool update, bool check, bool verbose)
+        static void Run(bool recursive, bool add, bool update, bool check, bool verbose, bool strict)
         {
             try
             {
@@ -76,7 +78,7 @@ namespace BitCheck
                 Console.WriteLine();
 
                 // Process current directory
-                ProcessDirectory(".", add, update, check, verbose, recursive);
+                ProcessDirectory(".", add, update, check, verbose, recursive, strict);
 
                 // Summary
                 var elapsed = DateTime.Now - startTime;
@@ -120,7 +122,7 @@ namespace BitCheck
             }
         }
 
-        static void ProcessDirectory(string directoryPath, bool add, bool update, bool check, bool verbose, bool recursive)
+        static void ProcessDirectory(string directoryPath, bool add, bool update, bool check, bool verbose, bool recursive, bool strict)
         {
             var fullPath = Path.GetFullPath(directoryPath);
             var dbPath = Path.Combine(fullPath, DatabaseFileName);
@@ -139,7 +141,7 @@ namespace BitCheck
 
             foreach (var filePath in files)
             {
-                ProcessFile(db, filePath, add, update, check, verbose);
+                ProcessFile(db, filePath, add, update, check, verbose, strict);
             }
 
             // Check for missing files (files in database but not on disk)
@@ -159,12 +161,12 @@ namespace BitCheck
                     .ToArray();
                 foreach (var subdir in subdirectories)
                 {
-                    ProcessDirectory(subdir, add, update, check, verbose, recursive);
+                    ProcessDirectory(subdir, add, update, check, verbose, recursive, strict);
                 }
             }
         }
 
-        static void ProcessFile(IDatabaseService db, string filePath, bool add, bool update, bool check, bool verbose)
+        static void ProcessFile(IDatabaseService db, string filePath, bool add, bool update, bool check, bool verbose, bool strict)
         {
             try
             {
@@ -201,13 +203,17 @@ namespace BitCheck
                     // File not in database
                     if (add)
                     {
+                        // Get file's modification date
+                        var fileInfo = new FileInfo(filePath);
+                        
                         // Create new entry: set both HashDate and LastCheckDate to now
                         var newEntry = new FileEntry
                         {
                             FileName = fileName,
                             Hash = currentHash,
                             HashDate = DateTime.UtcNow,      // Hash computed now
-                            LastCheckDate = DateTime.UtcNow  // Checked now
+                            LastCheckDate = DateTime.UtcNow, // Checked now
+                            LastModified = fileInfo.LastWriteTimeUtc // File's modification date
                         };
                         db.InsertFileEntry(newEntry);
                         Console.WriteLine($"[ADD] {fileName}");
@@ -242,31 +248,62 @@ namespace BitCheck
                         }
                         else
                         {
-                            Console.WriteLine($"[MISMATCH] {fileName}");
-                            Console.WriteLine($"  Expected: {existingEntry.Hash}");
-                            Console.WriteLine($"  Got:      {currentHash}");
-                            Console.WriteLine($"  Last successful check: {existingEntry.LastCheckDate:yyyy-MM-dd HH:mm:ss} UTC");
-                            _filesMismatched++;
-
-                            if (update)
+                            // Hash mismatch detected - determine if it's intentional change or corruption
+                            var fileInfo = new FileInfo(filePath);
+                            var currentModified = fileInfo.LastWriteTimeUtc;
+                            
+                            // Smart check: if modification date changed and not in strict mode, treat as intentional change
+                            bool modificationDateChanged = Math.Abs((currentModified - existingEntry.LastModified).TotalSeconds) > 1;
+                            bool isIntentionalChange = modificationDateChanged && !strict;
+                            
+                            if (isIntentionalChange)
                             {
-                                // Update hash, HashDate, and LastCheckDate when updating
+                                // File was intentionally modified - auto-update hash
+                                Console.WriteLine($"[UPDATED] {fileName} - File was modified ({currentModified:yyyy-MM-dd HH:mm:ss} UTC)");
                                 existingEntry.Hash = currentHash;
                                 existingEntry.HashDate = DateTime.UtcNow;
                                 existingEntry.LastCheckDate = DateTime.UtcNow;
+                                existingEntry.LastModified = currentModified;
                                 db.UpdateFileEntry(existingEntry);
-                                Console.WriteLine($"  [UPDATED] Hash updated in database");
                                 _filesUpdated++;
                             }
-                            // If not updating, don't modify the entry at all - preserve last successful check date
+                            else
+                            {
+                                // Possible corruption - modification date unchanged or strict mode
+                                Console.WriteLine($"[MISMATCH] {fileName}");
+                                Console.WriteLine($"  Expected: {existingEntry.Hash}");
+                                Console.WriteLine($"  Got:      {currentHash}");
+                                if (!modificationDateChanged)
+                                {
+                                    Console.WriteLine($"  File modification date unchanged: {existingEntry.LastModified:yyyy-MM-dd HH:mm:ss} UTC");
+                                    Console.WriteLine($"  Possible corruption detected!");
+                                }
+                                Console.WriteLine($"  Last successful check: {existingEntry.LastCheckDate:yyyy-MM-dd HH:mm:ss} UTC");
+                                _filesMismatched++;
+
+                                if (update)
+                                {
+                                    // Update hash, HashDate, LastCheckDate, and LastModified when updating
+                                    existingEntry.Hash = currentHash;
+                                    existingEntry.HashDate = DateTime.UtcNow;
+                                    existingEntry.LastCheckDate = DateTime.UtcNow;
+                                    existingEntry.LastModified = currentModified;
+                                    db.UpdateFileEntry(existingEntry);
+                                    Console.WriteLine($"  [UPDATED] Hash updated in database");
+                                    _filesUpdated++;
+                                }
+                                // If not updating, don't modify the entry at all - preserve last successful check date
+                            }
                         }
                     }
                     else if (update && !hashMatches)
                     {
-                        // Update mode without check - update hash and both timestamps
+                        // Update mode without check - update hash and all timestamps
+                        var fileInfo = new FileInfo(filePath);
                         existingEntry.Hash = currentHash;
                         existingEntry.HashDate = DateTime.UtcNow;      // Hash changed
                         existingEntry.LastCheckDate = DateTime.UtcNow; // Checked now
+                        existingEntry.LastModified = fileInfo.LastWriteTimeUtc; // File's modification date
                         db.UpdateFileEntry(existingEntry);
                         Console.WriteLine($"[UPDATE] {fileName}");
                         _filesUpdated++;

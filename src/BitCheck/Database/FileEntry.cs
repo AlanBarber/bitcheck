@@ -30,6 +30,12 @@ namespace BitCheck.Database
         public DateTime LastCheckDate { get; set; }
 
         /// <summary>
+        /// The file system modification date (LastWriteTimeUtc) when the hash was computed.
+        /// Used to distinguish intentional file changes from corruption.
+        /// </summary>
+        public DateTime LastModified { get; set; }
+
+        /// <summary>
         /// Default constructor for JSON serialization.
         /// </summary>
         public FileEntry() { }
