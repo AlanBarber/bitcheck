@@ -35,8 +35,16 @@ BitCheck.exe --add --recursive
 # Mode: Add 
 # Recursive: True
 # 
+# Directory: C:\ImportantData
 # [ADD] document.pdf
 # [ADD] photo.jpg
+# 
+# Directory: C:\ImportantData\Photos
+# [ADD] vacation.jpg
+# [ADD] family.png
+# 
+# Directory: C:\ImportantData\Documents
+# [ADD] report.pdf
 # [ADD] data.xlsx
 # ...
 # 
@@ -62,9 +70,14 @@ BitCheck.exe --check --recursive
 # Time elapsed: 0.42s
 
 # Output if corruption detected:
+# 
+# Directory: C:\ImportantData\Documents
 # [MISMATCH] data.xlsx
 #   Expected: A1B2C3D4E5F6G7H8
 #   Got:      X9Y8Z7W6V5U4T3S2
+#   File modification date unchanged: 2025-11-05 12:00:00 UTC
+#   Possible corruption detected!
+#   Last successful check: 2025-11-06 08:30:00 UTC
 # 
 # === Summary ===
 # Files processed: 150

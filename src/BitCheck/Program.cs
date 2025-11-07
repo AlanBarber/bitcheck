@@ -15,6 +15,7 @@ namespace BitCheck
         private static int _filesSkipped = 0;
         private static int _filesMissing = 0;
         private static int _filesRemoved = 0;
+        private static string? _lastPrintedDirectory = null;
 
         static int Main(string[] args)
         {
@@ -166,6 +167,24 @@ namespace BitCheck
             }
         }
 
+        /// <summary>
+        /// Prints the directory header if needed (in non-verbose recursive mode).
+        /// Only prints when we're about to output something and the directory hasn't been printed yet.
+        /// </summary>
+        static void PrintDirectoryHeaderIfNeeded(string filePath, bool verbose)
+        {
+            if (!verbose)
+            {
+                var directory = Path.GetDirectoryName(Path.GetFullPath(filePath));
+                if (directory != null && directory != _lastPrintedDirectory)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"Directory: {directory}");
+                    _lastPrintedDirectory = directory;
+                }
+            }
+        }
+
         static void ProcessFile(IDatabaseService db, string filePath, bool add, bool update, bool check, bool verbose, bool strict)
         {
             try
@@ -216,6 +235,7 @@ namespace BitCheck
                             LastModified = fileInfo.LastWriteTimeUtc // File's modification date
                         };
                         db.InsertFileEntry(newEntry);
+                        PrintDirectoryHeaderIfNeeded(filePath, verbose);
                         Console.WriteLine($"[ADD] {fileName}");
                         _filesAdded++;
                     }
@@ -259,6 +279,7 @@ namespace BitCheck
                             if (isIntentionalChange)
                             {
                                 // File was intentionally modified - auto-update hash
+                                PrintDirectoryHeaderIfNeeded(filePath, verbose);
                                 Console.WriteLine($"[UPDATED] {fileName} - File was modified ({currentModified:yyyy-MM-dd HH:mm:ss} UTC)");
                                 existingEntry.Hash = currentHash;
                                 existingEntry.HashDate = DateTime.UtcNow;
@@ -270,6 +291,7 @@ namespace BitCheck
                             else
                             {
                                 // Possible corruption - modification date unchanged or strict mode
+                                PrintDirectoryHeaderIfNeeded(filePath, verbose);
                                 Console.WriteLine($"[MISMATCH] {fileName}");
                                 Console.WriteLine($"  Expected: {existingEntry.Hash}");
                                 Console.WriteLine($"  Got:      {currentHash}");
@@ -305,6 +327,7 @@ namespace BitCheck
                         existingEntry.LastCheckDate = DateTime.UtcNow; // Checked now
                         existingEntry.LastModified = fileInfo.LastWriteTimeUtc; // File's modification date
                         db.UpdateFileEntry(existingEntry);
+                        PrintDirectoryHeaderIfNeeded(filePath, verbose);
                         Console.WriteLine($"[UPDATE] {fileName}");
                         _filesUpdated++;
                     }
@@ -373,11 +396,15 @@ namespace BitCheck
                         // Update mode: remove from database
                         db.DeleteFileEntry(entry.FileName);
                         _filesRemoved++;
+                        var missingFilePath = Path.Combine(directoryPath, entry.FileName);
+                        PrintDirectoryHeaderIfNeeded(missingFilePath, verbose);
                         Console.WriteLine($"[REMOVED] {entry.FileName} - File no longer exists");
                     }
                     else
                     {
                         // Check mode: just report
+                        var missingFilePath = Path.Combine(directoryPath, entry.FileName);
+                        PrintDirectoryHeaderIfNeeded(missingFilePath, verbose);
                         Console.WriteLine($"[MISSING] {entry.FileName} - File not found in directory");
                     }
                 }

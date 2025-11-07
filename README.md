@@ -98,7 +98,7 @@ bitcheck --add
 bitcheck --add --recursive
 ```
 
-**Output:**
+**Output (single directory):**
 ```
 BitCheck - Data Integrity Monitor
 Mode: Add 
@@ -113,6 +113,27 @@ Files processed: 3
 Files added: 3
 Files skipped: 0
 Time elapsed: 0.15s
+```
+
+**Output (recursive with multiple directories):**
+```
+BitCheck - Data Integrity Monitor
+Mode: Add 
+Recursive: True
+
+Directory: /home/user/documents
+[ADD] report.pdf
+[ADD] notes.txt
+
+Directory: /home/user/documents/photos
+[ADD] vacation.jpg
+[ADD] family.png
+
+=== Summary ===
+Files processed: 4
+Files added: 4
+Files skipped: 0
+Time elapsed: 0.18s
 ```
 
 ### Check for Corruption (Regular Use)
@@ -153,6 +174,26 @@ Files checked: 3
 Mismatches: 0
 Files skipped: 0
 Time elapsed: 0.12s
+```
+
+**Output (recursive mode with changes in subdirectories):**
+```
+BitCheck - Data Integrity Monitor
+Mode: Check 
+Recursive: True
+
+Directory: /home/user/documents/reports
+[UPDATED] quarterly.pdf - File was modified (2025-11-07 04:36:26 UTC)
+
+Directory: /home/user/documents/archives
+[UPDATED] backup.zip - File was modified (2025-11-07 04:38:15 UTC)
+
+=== Summary ===
+Files processed: 15
+Files checked: 15
+Mismatches: 0
+Files skipped: 0
+Time elapsed: 0.45s
 ```
 
 **Output (corruption detected - modification date unchanged):**
