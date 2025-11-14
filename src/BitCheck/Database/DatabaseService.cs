@@ -122,6 +122,8 @@ namespace BitCheck.Database
                 existingEntry.Hash = fileEntry.Hash;
                 existingEntry.HashDate = fileEntry.HashDate;
                 existingEntry.LastCheckDate = fileEntry.LastCheckDate;
+                existingEntry.LastModified = fileEntry.LastModified;
+                existingEntry.CreatedDate = fileEntry.CreatedDate;
                 _isDirty = true;
                 
                 return existingEntry;

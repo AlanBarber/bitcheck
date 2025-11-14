@@ -35,6 +35,7 @@ BitCheck.exe --add --recursive
 # Mode: Add 
 # Recursive: True
 # 
+# 
 # Directory: C:\ImportantData
 # [ADD] document.pdf
 # [ADD] photo.jpg
@@ -70,6 +71,7 @@ BitCheck.exe --check --recursive
 # Time elapsed: 0.42s
 
 # Output if corruption detected:
+# 
 # 
 # Directory: C:\ImportantData\Documents
 # [MISMATCH] data.xlsx

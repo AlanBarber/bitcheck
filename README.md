@@ -65,7 +65,9 @@ BitCheck uses **smart checking** by default to distinguish between intentional f
 
 This makes BitCheck practical for real-world use where files are frequently edited, while still catching true corruption.
 
-**Use `--strict` mode** if you want to report all hash mismatches as corruption, regardless of modification date.
+**Use `--strict` mode** if you want to report all hash mismatches as corruption, regardless of modification date. In strict mode, files with changed creation dates will also prevent auto-updates.
+
+**Use `--timestamps` mode** if you want to verify that both creation and modification dates remain unchanged, in addition to the file hash. This is useful for detecting file system manipulation or when files are copied/moved.
 
 ### Basic Commands
 
@@ -83,7 +85,8 @@ This makes BitCheck practical for real-world use where files are frequently edit
 - `-u, --update` - Update hashes for files that have changed
 - `-r, --recursive` - Process subdirectories
 - `-v, --verbose` - Show detailed output
-- `-s, --strict` - Strict mode: report all hash mismatches as corruption
+- `-s, --strict` - Strict mode: report all hash mismatches as corruption, prevents auto-update if creation date changed
+- `-t, --timestamps` - Timestamp mode: flag file as changed if hash, created date, or modified date do not match
 - `--help` - Show help information
 
 ## Usage Examples
@@ -248,6 +251,42 @@ Time elapsed: 0.13s
 WARNING: 1 file(s) failed integrity check!
 ```
 
+### Timestamp Mode (Verify Creation and Modification Dates)
+
+```bash
+# Check that hash AND timestamps haven't changed
+bitcheck --check --timestamps
+
+# Useful for detecting file system manipulation or copied files
+```
+
+**Output (timestamp mismatch detected):**
+```
+BitCheck - Data Integrity Monitor
+Mode: Check 
+Recursive: False
+
+[MISMATCH] document.pdf
+  Expected hash: A1B2C3D4E5F6G7H8
+  Got hash:      A1B2C3D4E5F6G7H8
+  Expected modified: 2025-11-05 12:00:00 UTC
+  Got modified:      2025-11-07 14:30:00 UTC
+  Expected created:  2025-11-01 10:00:00 UTC
+  Got created:       2025-11-07 14:30:00 UTC
+  Last successful check: 2025-11-07 04:36:31 UTC
+
+=== Summary ===
+Files processed: 3
+Files checked: 3
+Mismatches: 1
+Files skipped: 0
+Time elapsed: 0.13s
+
+WARNING: 1 file(s) failed integrity check!
+```
+
+**Note:** Creation dates are always tracked in the database, but only verified when `--timestamps` flag is used.
+
 ### Manual Update (When Needed)
 
 ```bash
@@ -356,7 +395,13 @@ A: BitCheck reports the corrupted files. You should restore them from backups im
 A: By default, BitCheck distinguishes intentional file edits from corruption by checking the file's modification date. If the hash changes but the modification date also changed, it's treated as an intentional edit and auto-updated. If the hash changes but the modification date is unchanged, it's reported as possible corruption.
 
 **Q: When should I use strict mode?**  
-A: Use `--strict` for read-only media (like archived backups or media libraries) where files should never change, or when you want maximum sensitivity to any changes.
+A: Use `--strict` for read-only media (like archived backups or media libraries) where files should never change, or when you want maximum sensitivity to any changes. Strict mode also prevents auto-updates if a file's creation date has changed.
+
+**Q: When should I use timestamp mode?**  
+A: Use `--timestamps` when you want to verify that both creation and modification dates remain unchanged, in addition to the file hash. This is useful for detecting file system manipulation, verifying that files haven't been copied/moved, or ensuring complete file metadata integrity.
+
+**Q: What's the difference between strict and timestamp modes?**  
+A: `--strict` mode reports all hash mismatches as corruption and prevents auto-updates when creation dates change. `--timestamps` mode additionally verifies that both creation and modification dates match the database, flagging any timestamp changes as mismatches even if the hash is correct.
 
 **Q: Can I use this for backups?**  
 A: Yes! Run `bitcheck --add --recursive` after creating a backup, then check it regularly. Use `--strict` mode for backup verification since backup files shouldn't change.
@@ -449,9 +494,19 @@ The project includes 62+ comprehensive unit tests covering:
   "FileName": "document.pdf",
   "Hash": "A1B2C3D4E5F6G7H8",
   "HashDate": "2025-11-05T12:00:00Z",
-  "LastCheckDate": "2025-11-05T12:30:00Z"
+  "LastCheckDate": "2025-11-05T12:30:00Z",
+  "LastModified": "2025-11-05T11:45:00Z",
+  "CreatedDate": "2025-11-01T10:00:00Z"
 }
 ```
+
+**Fields:**
+- `FileName`: Name of the file (not full path)
+- `Hash`: XXHash64 hex string of file contents
+- `HashDate`: When the hash was computed or last updated
+- `LastCheckDate`: When the file was last checked for integrity
+- `LastModified`: File system modification date (LastWriteTimeUtc)
+- `CreatedDate`: File system creation date (CreationTimeUtc) - always tracked, verified only with `--timestamps`
 
 ### Documentation
 

@@ -36,6 +36,12 @@ namespace BitCheck.Database
         public DateTime LastModified { get; set; }
 
         /// <summary>
+        /// The file system creation date (CreationTimeUtc) when the file was added to the database.
+        /// Used with --timestamps flag to detect if file creation date has changed.
+        /// </summary>
+        public DateTime CreatedDate { get; set; }
+
+        /// <summary>
         /// Default constructor for JSON serialization.
         /// </summary>
         public FileEntry() { }
