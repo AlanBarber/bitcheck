@@ -108,10 +108,15 @@ BitCheck --check --update
 
 # See everything (debugging)
 BitCheck --check --verbose
+
+# Use single database for entire tree (easier management)
+BitCheck --add --recursive --single-db
+BitCheck --check --recursive --single-db
 ```
 
 ## What Gets Created
 
+### Normal Mode (Default)
 ```
 YourFolder/
 ├── .bitcheck.db          ← Database file (hidden on Unix)
@@ -121,6 +126,19 @@ YourFolder/
     ├── .bitcheck.db      ← Separate database for subfolder
     └── file3.txt
 ```
+
+### Single Database Mode (`--single-db`)
+```
+YourFolder/
+├── .bitcheck.db          ← Single database for all files
+├── file1.txt
+├── file2.txt
+└── SubFolder/
+    └── file3.txt         ← No separate database needed
+```
+
+**Normal mode:** Each directory gets its own database  
+**Single database mode:** One database in root tracks all files with relative paths
 
 **Important:** Keep the `.bitcheck.db` files with your data!
 
@@ -184,6 +202,8 @@ BitCheck --add --recursive
 3. **Keep databases** - Don't delete `.bitcheck.db` files
 4. **Backup databases** - Include them in your backups
 5. **Use verbose sparingly** - Only for debugging
+6. **Use `--single-db` for archives** - Easier to manage one database for backup sets or portable collections
+7. **Be consistent** - If you start with `--single-db`, always use it for that directory
 
 ## Help
 

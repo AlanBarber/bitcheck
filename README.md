@@ -87,6 +87,7 @@ This makes BitCheck practical for real-world use where files are frequently edit
 - `-v, --verbose` - Show detailed output
 - `-s, --strict` - Strict mode: report all hash mismatches as corruption, prevents auto-update if creation date changed
 - `-t, --timestamps` - Timestamp mode: flag file as changed if hash, created date, or modified date do not match
+- `--single-db` - Single database mode: use one database file in root directory with relative paths
 - `--help` - Show help information
 
 ## Usage Examples
@@ -287,6 +288,50 @@ WARNING: 1 file(s) failed integrity check!
 
 **Note:** Creation dates are always tracked in the database, but only verified when `--timestamps` flag is used.
 
+### Single Database Mode (One Database for All Files)
+
+By default, BitCheck creates a separate `.bitcheck.db` file in each directory. With `--single-db` mode, you can use a single database file in the root directory that tracks all files using relative paths.
+
+```bash
+# Create single database for entire directory tree
+bitcheck --add --recursive --single-db
+
+# Check all files using single database
+bitcheck --check --recursive --single-db
+```
+
+**Output:**
+```
+BitCheck - Data Integrity Monitor
+Mode: Add 
+Recursive: True
+Single Database: True
+
+[ADD] document.pdf
+[ADD] photo.jpg
+[ADD] subfolder\report.docx
+[ADD] subfolder\data\spreadsheet.xlsx
+
+=== Summary ===
+Files processed: 4
+Files added: 4
+Files skipped: 0
+Time elapsed: 0.12s
+```
+
+**Benefits of Single Database Mode:**
+- ✅ **Easier management** - One database file instead of many
+- ✅ **Portable** - Relative paths allow moving the entire directory
+- ✅ **Simpler backups** - Only one database file to backup
+- ✅ **Better for archives** - Ideal for read-only collections
+
+**When to use:**
+- Large directory trees you want to track as a unit
+- Portable archives or backup sets
+- Projects where you want centralized tracking
+
+**Note:** Single database mode stores relative paths (e.g., `subfolder/file.txt`) instead of just filenames. The database must always be in the root directory where you run the command.
+
 ### Manual Update (When Needed)
 
 ```bash
@@ -414,6 +459,12 @@ A: Minimal. XXHash64 is 10x faster than MD5 and 20x faster than SHA-256, with ve
 
 **Q: What happens to deleted files?**  
 A: During `--check`, deleted files are reported as `[MISSING]`. Use `--update` to remove them from the database.
+
+**Q: When should I use single database mode (`--single-db`)?**  
+A: Use `--single-db` when you want one centralized database for an entire directory tree instead of separate databases in each folder. This is ideal for portable archives, backup sets, or projects where you want all file tracking in one place. The database stores relative paths, making it easy to move the entire directory structure.
+
+**Q: What's the difference between normal mode and single database mode?**  
+A: Normal mode creates a `.bitcheck.db` file in each directory and stores only filenames. Single database mode (`--single-db`) creates one database in the root directory and stores relative paths (e.g., `subfolder/file.txt`). Single database mode is easier to manage but requires using `--single-db` consistently for all operations.
 
 ---
 
