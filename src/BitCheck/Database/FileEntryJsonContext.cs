@@ -8,7 +8,7 @@ namespace BitCheck.Database
     /// </summary>
     [JsonSerializable(typeof(List<FileEntry>))]
     [JsonSerializable(typeof(FileEntry))]
-    internal partial class FileEntryJsonContext : JsonSerializerContext
+    public partial class FileEntryJsonContext : JsonSerializerContext
     {
     }
 }

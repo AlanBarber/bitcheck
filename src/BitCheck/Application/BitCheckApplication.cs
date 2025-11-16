@@ -36,14 +36,7 @@ namespace BitCheck.Application
                 var startTime = DateTime.UtcNow;
                 WriteHeader();
 
-                if (_options.SingleDatabase)
-                {
-                    ProcessSingleDatabase(".");
-                }
-                else
-                {
-                    ProcessLocalDatabases(".");
-                }
+                ProcessDatabases(".");
 
                 WriteSummary(DateTime.UtcNow - startTime);
             }
@@ -144,68 +137,44 @@ namespace BitCheck.Application
         }
 
         /// <summary>
-        /// Processes the local databases in the specified directory.
+        /// Processes directories using either a single shared database or per-directory databases.
         /// </summary>
-        /// <param name="directoryPath">The directory path to process.</param>
-        private void ProcessLocalDatabases(string directoryPath)
-        {
-            var fullPath = Path.GetFullPath(directoryPath);
-            if (_options.Verbose)
-            {
-                Console.WriteLine($"Processing: {fullPath}");
-            }
-
-            using var db = CreateDatabase(fullPath);
-            var files = GetEligibleFiles(fullPath);
-            ProcessFileSet(db, files, Path.GetFileName, Path.GetFileName);
-
-            if (_options.Check || _options.Update)
-            {
-                CheckForMissingFiles(db, fullPath, files);
-            }
-
-            db.Flush();
-
-            if (_options.Recursive)
-            {
-                foreach (var subdir in GetEligibleDirectories(fullPath))
-                {
-                    ProcessLocalDatabases(subdir);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Processes the single database in the specified directory.
-        /// </summary>
-        /// <param name="rootPath">The root path of the directory to process.</param>
-        private void ProcessSingleDatabase(string rootPath)
+        /// <param name="rootPath">The root path to begin processing.</param>
+        private void ProcessDatabases(string rootPath)
         {
             var fullRootPath = Path.GetFullPath(rootPath);
-            var dbPath = Path.Combine(fullRootPath, BitCheckConstants.DatabaseFileName);
-            if (_options.Verbose)
+
+            if (_options.SingleDatabase)
             {
-                Console.WriteLine($"Using single database: {dbPath}");
+                var dbPath = Path.Combine(fullRootPath, BitCheckConstants.DatabaseFileName);
+                if (_options.Verbose)
+                {
+                    Console.WriteLine($"Using single database: {dbPath}");
+                }
+
+                using var db = new DatabaseService(dbPath);
+                ProcessDirectory(fullRootPath, fullRootPath, db);
+
+                if (_options.Check || _options.Update)
+                {
+                    CheckForMissingFilesSingleDb(db, fullRootPath);
+                }
+
+                db.Flush();
             }
-
-            using var db = new DatabaseService(dbPath);
-            ProcessSingleDatabaseRecursive(db, fullRootPath, fullRootPath);
-
-            if (_options.Check || _options.Update)
+            else
             {
-                CheckForMissingFilesSingleDb(db, fullRootPath);
+                ProcessDirectory(fullRootPath, fullRootPath, null);
             }
-
-            db.Flush();
         }
 
         /// <summary>
-        /// Recursively processes the single database in the specified directory.
+        /// Processes a directory, optionally using a shared database when operating in single database mode.
         /// </summary>
-        /// <param name="db">The database service to use.</param>
-        /// <param name="rootPath">The root path of the directory to process.</param>
-        /// <param name="currentPath">The current path to process.</param>
-        private void ProcessSingleDatabaseRecursive(IDatabaseService db, string rootPath, string currentPath)
+        /// <param name="rootPath">The root path for relative key calculations.</param>
+        /// <param name="currentPath">The current directory being processed.</param>
+        /// <param name="sharedDatabase">An optional shared database instance.</param>
+        private void ProcessDirectory(string rootPath, string currentPath, IDatabaseService? sharedDatabase)
         {
             var fullPath = Path.GetFullPath(currentPath);
             if (_options.Verbose)
@@ -213,16 +182,46 @@ namespace BitCheck.Application
                 Console.WriteLine($"Processing: {fullPath}");
             }
 
-            var files = GetEligibleFiles(fullPath);
-            ProcessFileSet(db, files,
-                file => Path.GetRelativePath(rootPath, Path.GetFullPath(file)),
-                file => Path.GetRelativePath(rootPath, Path.GetFullPath(file)));
+            var files = FileSystemUtilities.GetEligibleFiles(fullPath);
+            var database = sharedDatabase ?? CreateDatabase(fullPath);
+            var ownsDatabase = sharedDatabase is null;
+            var useRelativePaths = sharedDatabase != null && _options.SingleDatabase;
+
+            try
+            {
+                foreach (var file in files)
+                {
+                    var fullFilePath = Path.GetFullPath(file);
+                    var databaseKey = useRelativePaths
+                        ? Path.GetRelativePath(rootPath, fullFilePath)
+                        : Path.GetFileName(fullFilePath);
+
+                    var displayName = useRelativePaths
+                        ? databaseKey
+                        : Path.GetFileName(fullFilePath);
+
+                    ProcessFile(database, file, databaseKey, displayName);
+                }
+
+                if (ownsDatabase && (_options.Check || _options.Update))
+                {
+                    CheckForMissingFiles(database, fullPath, files);
+                }
+            }
+            finally
+            {
+                if (ownsDatabase)
+                {
+                    database.Flush();
+                    database.Dispose();
+                }
+            }
 
             if (_options.Recursive)
             {
-                foreach (var subdir in GetEligibleDirectories(fullPath))
+                foreach (var subdir in FileSystemUtilities.GetEligibleDirectories(fullPath))
                 {
-                    ProcessSingleDatabaseRecursive(db, rootPath, subdir);
+                    ProcessDirectory(rootPath, subdir, sharedDatabase);
                 }
             }
         }
@@ -239,23 +238,6 @@ namespace BitCheck.Application
         }
 
         /// <summary>
-        /// Processes a set of files using the specified database service.
-        /// </summary>
-        /// <param name="db">The database service to use.</param>
-        /// <param name="files">The files to process.</param>
-        /// <param name="databaseKeyResolver">A function that resolves the database key for a file.</param>
-        /// <param name="displayNameResolver">A function that resolves the display name for a file.</param>
-        private void ProcessFileSet(IDatabaseService db, string[] files, Func<string, string> databaseKeyResolver, Func<string, string> displayNameResolver)
-        {
-            foreach (var file in files)
-            {
-                var databaseKey = databaseKeyResolver(file);
-                var displayName = displayNameResolver(file);
-                ProcessFile(db, file, databaseKey, displayName);
-            }
-        }
-
-        /// <summary>
         /// Processes a single file using the specified database service.
         /// </summary>
         /// <param name="db">The database service to use.</param>
@@ -266,7 +248,7 @@ namespace BitCheck.Application
         {
             try
             {
-                if (!CanReadFile(filePath, out var errorReason))
+                if (!FileSystemUtilities.CanReadFile(filePath, out var errorReason))
                 {
                     if (_options.Verbose)
                     {
@@ -277,7 +259,7 @@ namespace BitCheck.Application
                     return;
                 }
 
-                var currentHash = ComputeHash(filePath);
+                var currentHash = FileSystemUtilities.ComputeHash(filePath);
                 if (currentHash == null)
                 {
                     if (_options.Verbose)
@@ -375,14 +357,17 @@ namespace BitCheck.Application
         private void HandleExistingEntry(IDatabaseService db, FileEntry existingEntry, string filePath, string displayName, string currentHash)
         {
             bool hashMatches = existingEntry.Hash == currentHash;
+            bool needsTimestampInfo = _options.Timestamps && (_options.Check || _options.Update);
+            FileInfo? fileInfo = needsTimestampInfo ? new FileInfo(filePath) : null;
+            DateTime currentModified = fileInfo?.LastWriteTimeUtc ?? default;
+            DateTime currentCreated = fileInfo?.CreationTimeUtc ?? default;
+            bool timestampMismatch = _options.Timestamps && fileInfo != null &&
+                                      !TimestampsMatch(existingEntry, currentModified, currentCreated);
 
             if (_options.Check)
             {
                 _stats.FilesChecked++;
-                var fileInfo = new FileInfo(filePath);
-                var currentModified = fileInfo.LastWriteTimeUtc;
-                var currentCreated = fileInfo.CreationTimeUtc;
-                bool timestampsMatch = !_options.Timestamps || TimestampsMatch(existingEntry, currentModified, currentCreated);
+                bool timestampsMatch = !_options.Timestamps || !timestampMismatch;
 
                 if (hashMatches && timestampsMatch)
                 {
@@ -401,6 +386,12 @@ namespace BitCheck.Application
             }
 
             if (_options.Update && !hashMatches)
+            {
+                UpdateEntry(db, existingEntry, filePath, displayName, currentHash);
+                return;
+            }
+
+            if (_options.Update && _options.Timestamps && timestampMismatch)
             {
                 UpdateEntry(db, existingEntry, filePath, displayName, currentHash);
             }
@@ -594,7 +585,7 @@ namespace BitCheck.Application
         /// </summary>
         /// <param name="db">The database service to use.</param>
         /// <param name="rootPath">The root path to check.</param>
-        private void CheckForMissingFilesSingleDb(DatabaseService db, string rootPath)
+        private void CheckForMissingFilesSingleDb(IDatabaseService db, string rootPath)
         {
             var fullRootPath = Path.GetFullPath(rootPath);
 
@@ -643,136 +634,5 @@ namespace BitCheck.Application
             }
         }
 
-        /// <summary>
-        /// Gets the eligible files in the directory.
-        /// </summary>
-        /// <param name="directory">The directory to process.</param>
-        private static string[] GetEligibleFiles(string directory) =>
-            Directory.GetFiles(directory)
-                .Where(f => !ShouldSkipFile(f))
-                .ToArray();
-
-        /// <summary>
-        /// Gets the eligible directories in the directory.
-        /// </summary>
-        /// <param name="directory">The directory to process.</param>
-        private static string[] GetEligibleDirectories(string directory) =>
-            Directory.GetDirectories(directory)
-                .Where(d => !IsHidden(d))
-                .ToArray();
-
-        /// <summary>
-        /// Checks if the file can be read.
-        /// </summary>
-        /// <param name="filePath">The file path to check.</param>
-        /// <param name="errorReason">The error reason if the file cannot be read.</param>
-        private static bool CanReadFile(string filePath, out string? errorReason)
-        {
-            errorReason = null;
-
-            try
-            {
-                if (!File.Exists(filePath))
-                {
-                    errorReason = "File not found";
-                    return false;
-                }
-
-                var fileInfo = new FileInfo(filePath);
-                if (fileInfo.Length == 0)
-                {
-                    return true;
-                }
-
-                using var testStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                return true;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                errorReason = "Access denied";
-                return false;
-            }
-            catch (IOException ex)
-            {
-                errorReason = $"I/O error: {ex.Message}";
-                return false;
-            }
-            catch (Exception ex)
-            {
-                errorReason = $"Error: {ex.Message}";
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Checks if the file should be skipped.
-        /// </summary>
-        /// <param name="filePath">The file path to check.</param>
-        private static bool ShouldSkipFile(string filePath)
-        {
-            var fileName = Path.GetFileName(filePath);
-            if (string.Equals(fileName, BitCheckConstants.DatabaseFileName, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            return IsHidden(filePath);
-        }
-
-        /// <summary>
-        /// Checks if the file is hidden.
-        /// </summary>
-        /// <param name="path">The path to check.</param>
-        private static bool IsHidden(string path)
-        {
-            try
-            {
-                var fileInfo = new FileInfo(path);
-                var dirInfo = new DirectoryInfo(path);
-                bool exists = fileInfo.Exists || dirInfo.Exists;
-                if (!exists)
-                {
-                    return false;
-                }
-
-                var name = fileInfo.Exists ? fileInfo.Name : dirInfo.Name;
-                if (name.StartsWith('.'))
-                {
-                    return true;
-                }
-
-                if (OperatingSystem.IsWindows())
-                {
-                    var attributes = fileInfo.Exists ? fileInfo.Attributes : dirInfo.Attributes;
-                    return (attributes & FileAttributes.Hidden) == FileAttributes.Hidden;
-                }
-
-                return false;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Computes the hash of the file.
-        /// </summary>
-        /// <param name="path">The file path to compute the hash for.</param>
-        private static string? ComputeHash(string path)
-        {
-            try
-            {
-                using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                var hasher = new XxHash64();
-                hasher.Append(fileStream);
-                var rawHash = hasher.GetCurrentHash();
-                return Convert.ToHexString(rawHash);
-            }
-            catch
-            {
-                return null;
-            }
-        }
     }
 }
