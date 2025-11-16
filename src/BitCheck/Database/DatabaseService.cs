@@ -1,14 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace BitCheck.Database
 {
     /// <summary>
-    /// 
+    /// JSON-backed implementation of <see cref="IDatabaseService"/> that caches entries in-memory and persists to disk.
     /// </summary>
     public class DatabaseService : IDatabaseService
     {
