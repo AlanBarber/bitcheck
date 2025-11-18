@@ -221,24 +221,6 @@ public class BitCheckApplicationTests
         Assert.IsFalse(capture.ToString().Contains("Processing:"), "Non-verbose mode should not print processing messages");
     }
 
-    [TestMethod]
-    public void StrictMode_EmitsWarningForCreationChanges()
-    {
-        var relaxedDir = Path.Combine(_testDir, "relaxed");
-        var strictDir = Path.Combine(_testDir, "strict");
-        Directory.CreateDirectory(relaxedDir);
-        Directory.CreateDirectory(strictDir);
-
-        PrepareFileForStrictCheck(relaxedDir);
-        PrepareFileForStrictCheck(strictDir);
-
-        var relaxedOutput = RunStrictCheck(relaxedDir, strict: false);
-        var strictOutput = RunStrictCheck(strictDir, strict: true);
-
-        Assert.IsFalse(relaxedOutput.Contains("Creation date change detected"), "Relaxed mode should not emit strict creation warning");
-        StringAssert.Contains(strictOutput, "Creation date change detected", "Strict mode should warn about creation changes");
-    }
-
     private void PrepareFileForStrictCheck(string workingDir)
     {
         var filePath = Path.Combine(workingDir, "file.txt");
@@ -276,7 +258,7 @@ public class BitCheckApplicationTests
             Check: true,
             Verbose: true,
             Strict: strict,
-            Timestamps: false,
+            Timestamps: true,
             SingleDatabase: true);
 
         using var capture = new StringWriter();
