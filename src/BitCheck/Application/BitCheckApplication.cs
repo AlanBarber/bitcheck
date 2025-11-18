@@ -465,19 +465,16 @@ namespace BitCheck.Application
                 {
                     Console.WriteLine($"  Expected created:  {existingEntry.CreatedDate:yyyy-MM-dd HH:mm:ss} UTC");
                     Console.WriteLine($"  Got created:       {currentCreated:yyyy-MM-dd HH:mm:ss} UTC");
+                    if (_options.Strict)
+                    {
+                        Console.WriteLine("  Creation date change detected (strict mode prevents auto-update)");
+                    }
                 }
             }
             else if (!modificationDateChanged)
             {
                 Console.WriteLine($"  File modification date unchanged: {existingEntry.LastModified:yyyy-MM-dd HH:mm:ss} UTC");
                 Console.WriteLine("  Possible corruption detected!");
-            }
-
-            if (_options.Strict && creationDateChanged)
-            {
-                Console.WriteLine($"  Expected created:  {existingEntry.CreatedDate:yyyy-MM-dd HH:mm:ss} UTC");
-                Console.WriteLine($"  Got created:       {currentCreated:yyyy-MM-dd HH:mm:ss} UTC");
-                Console.WriteLine("  Creation date change detected (strict mode prevents auto-update)");
             }
 
             Console.WriteLine($"  Last successful check: {existingEntry.LastCheckDate:yyyy-MM-dd HH:mm:ss} UTC");
