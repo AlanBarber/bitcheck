@@ -162,7 +162,14 @@ namespace BitCheck.Database
             
             try
             {
-                var json = File.ReadAllText(_databaseFileName);
+                // Use FileStream to read the file, which handles hidden files better
+                string json;
+                using (var stream = new FileStream(_databaseFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var reader = new StreamReader(stream))
+                {
+                    json = reader.ReadToEnd();
+                }
+
                 var entries = JsonSerializer.Deserialize(json, FileEntryJsonContext.Default.ListFileEntry) ?? new List<FileEntry>();
                 _cache = entries
                     .Where(e => !string.IsNullOrEmpty(e.FileName))
