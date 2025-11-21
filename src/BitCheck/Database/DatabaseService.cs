@@ -33,6 +33,12 @@ namespace BitCheck.Database
             {
                 File.WriteAllText(_databaseFileName, "[]");
             }
+            
+            // make sure file is marked hidden on Windows
+            if (OperatingSystem.IsWindows() && !File.GetAttributes(_databaseFileName).HasFlag(FileAttributes.Hidden))
+            {
+                File.SetAttributes(_databaseFileName, FileAttributes.Hidden);
+            }
         }
 
         /// <summary>
