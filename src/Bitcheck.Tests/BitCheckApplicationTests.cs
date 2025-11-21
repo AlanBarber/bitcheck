@@ -218,7 +218,7 @@ public class BitCheckApplicationTests
         using var capture = new StringWriter();
         RunApp(quietOptions, _testDir, capture);
 
-        Assert.IsFalse(capture.ToString().Contains("Processing:"), "Non-verbose mode should not print processing messages");
+        Assert.DoesNotContain("Processing:", capture.ToString(), "Non-verbose mode should not print processing messages");
     }
 
     private void PrepareFileForStrictCheck(string workingDir)

@@ -137,16 +137,13 @@ namespace BitCheck.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(FileNotFoundException))]
         public void XXHash64_NonExistentFile_ThrowsException()
         {
             // Arrange
             var nonExistentPath = Path.Combine(Path.GetTempPath(), $"nonexistent_{Guid.NewGuid()}.txt");
 
-            // Act
-            ComputeFileHash(nonExistentPath);
-
-            // Assert - Exception expected
+            // Act & Assert
+            Assert.Throws<FileNotFoundException>(() => ComputeFileHash(nonExistentPath));
         }
 
         [TestMethod]

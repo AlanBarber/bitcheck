@@ -81,7 +81,7 @@ namespace BitCheck.Tests
             };
 
             // Act & Assert
-            Assert.ThrowsException<InvalidOperationException>(() => db.InsertFileEntry(entry2));
+            Assert.Throws<InvalidOperationException>(() => db.InsertFileEntry(entry2));
         }
 
         [TestMethod]
@@ -98,7 +98,7 @@ namespace BitCheck.Tests
             };
 
             // Act & Assert
-            Assert.ThrowsException<ArgumentException>(() => db.InsertFileEntry(entry));
+            Assert.Throws<ArgumentException>(() => db.InsertFileEntry(entry));
         }
 
         [TestMethod]
@@ -182,7 +182,7 @@ namespace BitCheck.Tests
             };
 
             // Act & Assert
-            Assert.ThrowsException<InvalidOperationException>(() => db.UpdateFileEntry(entry));
+            Assert.Throws<InvalidOperationException>(() => db.UpdateFileEntry(entry));
         }
 
         [TestMethod]

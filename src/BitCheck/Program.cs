@@ -13,7 +13,7 @@ namespace BitCheck
         /// </summary>
         /// <param name="args">Command-line arguments.</param>
         /// <returns>Process exit code returned by System.CommandLine.</returns>
-        static int Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
             if (args.Length == 0)
             {
@@ -21,7 +21,7 @@ namespace BitCheck
             }
 
             var rootCommand = BuildRootCommand();
-            return rootCommand.Invoke(args);
+            return await rootCommand.InvokeAsync(args);
         }
 
         /// <summary>
@@ -30,13 +30,20 @@ namespace BitCheck
         /// <returns>Configured <see cref="RootCommand"/> instance.</returns>
         private static RootCommand BuildRootCommand()
         {
-            var recursiveOption = new Option<bool>(new[] { "--recursive", "-r" }, "Recursively process all files in sub-folders");
-            var addOption = new Option<bool>(new[] { "--add", "-a" }, "Add new files to the database");
-            var updateOption = new Option<bool>(new[] { "--update", "-u" }, "Update any existing hashes that do not match");
-            var checkOption = new Option<bool>(new[] { "--check", "-c" }, "Check existing hashes match");
-            var verboseOption = new Option<bool>(new[] { "--verbose", "-v" }, "Verbose output");
-            var strictOption = new Option<bool>(new[] { "--strict", "-s" }, "Strict mode: report all hash mismatches as corruption, even if file modification date changed");
-            var timestampsOption = new Option<bool>(new[] { "--timestamps", "-t" }, "Timestamp mode: flag file as changed if hash, created date, or modified date do not match");
+            var recursiveOption = new Option<bool>("--recursive", "Recursively process all files in sub-folders");
+            recursiveOption.AddAlias("-r");
+            var addOption = new Option<bool>("--add", "Add new files to the database");
+            addOption.AddAlias("-a");
+            var updateOption = new Option<bool>("--update", "Update any existing hashes that do not match");
+            updateOption.AddAlias("-u");
+            var checkOption = new Option<bool>("--check", "Check existing hashes match");
+            checkOption.AddAlias("-c");
+            var verboseOption = new Option<bool>("--verbose", "Verbose output");
+            verboseOption.AddAlias("-v");
+            var strictOption = new Option<bool>("--strict", "Strict mode: report all hash mismatches as corruption, even if file modification date changed");
+            strictOption.AddAlias("-s");
+            var timestampsOption = new Option<bool>("--timestamps", "Timestamp mode: flag file as changed if hash, created date, or modified date do not match");
+            timestampsOption.AddAlias("-t");
             var singleDbOption = new Option<bool>("--single-db", "Single database mode: use single database file in root directory with relative paths");
 
             var rootCommand = new RootCommand

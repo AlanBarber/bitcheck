@@ -43,7 +43,7 @@ namespace BitCheck.Tests
 
             // Assert
             Assert.IsNotNull(entries);
-            Assert.AreEqual(0, entries.Count);
+            Assert.HasCount(0, entries);
         }
 
         [TestMethod]
@@ -63,7 +63,7 @@ namespace BitCheck.Tests
             var entries = db.GetAllEntries().ToList();
 
             // Assert
-            Assert.AreEqual(3, entries.Count);
+            Assert.HasCount(3, entries);
             Assert.IsTrue(entries.Any(e => e.FileName == "file1.txt"));
             Assert.IsTrue(entries.Any(e => e.FileName == "file2.txt"));
             Assert.IsTrue(entries.Any(e => e.FileName == "file3.txt"));
@@ -85,7 +85,7 @@ namespace BitCheck.Tests
             var entries = db.GetAllEntries().ToList();
 
             // Assert
-            Assert.AreEqual(1, entries.Count);
+            Assert.HasCount(1, entries);
             Assert.AreEqual("file2.txt", entries[0].FileName);
         }
 
@@ -104,7 +104,7 @@ namespace BitCheck.Tests
             var entriesAgain = db.GetAllEntries().ToList();
 
             // Assert
-            Assert.AreEqual(1, entriesAgain.Count); // Database should still have the entry
+            Assert.HasCount(1, entriesAgain); // Database should still have the entry
         }
 
         [TestMethod]
@@ -127,7 +127,7 @@ namespace BitCheck.Tests
                 var entries = db.GetAllEntries().ToList();
 
                 // Assert
-                Assert.AreEqual(2, entries.Count);
+                Assert.HasCount(2, entries);
             }
         }
 
@@ -182,7 +182,7 @@ namespace BitCheck.Tests
                 var entries = db.GetAllEntries().ToList();
 
                 // Assert
-                Assert.AreEqual(1, entries.Count);
+                Assert.HasCount(1, entries);
                 Assert.AreEqual("file2.txt", entries[0].FileName);
             }
         }
@@ -208,7 +208,7 @@ namespace BitCheck.Tests
             var entries = db.GetAllEntries().ToList();
 
             // Assert
-            Assert.AreEqual(3, entries.Count);
+            Assert.HasCount(3, entries);
             Assert.IsTrue(entries.Any(e => e.FileName == "file1.txt"));
             Assert.IsFalse(entries.Any(e => e.FileName == "file2.txt"));
             Assert.IsTrue(entries.Any(e => e.FileName == "file3.txt"));
@@ -227,7 +227,7 @@ namespace BitCheck.Tests
             var entries = db.GetAllEntries().ToList();
 
             // Assert
-            Assert.AreEqual(1, entries.Count);
+            Assert.HasCount(1, entries);
             Assert.AreEqual("File1.TXT", entries[0].FileName);
         }
     }

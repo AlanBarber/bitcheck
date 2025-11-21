@@ -129,7 +129,7 @@ namespace BitCheck.Tests
             using (var lockingStream = new FileStream(testFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
             {
                 // Try to open with shared read (should fail)
-                Assert.ThrowsException<IOException>(() =>
+                Assert.Throws<IOException>(() =>
                 {
                     using var stream = new FileStream(testFile, FileMode.Open, FileAccess.Read, FileShare.Read);
                 });
@@ -156,7 +156,7 @@ namespace BitCheck.Tests
 
             // Assert
             Assert.IsTrue(canRead);
-            Assert.IsTrue(fileInfo.Length > 1024 * 1024); // At least 1MB
+            Assert.IsGreaterThan(1024 * 1024, fileInfo.Length); // At least 1MB
         }
 
         [TestMethod]
@@ -210,7 +210,7 @@ namespace BitCheck.Tests
             var files = Directory.GetFiles(_testDir);
 
             // Assert
-            Assert.AreEqual(3, files.Length);
+            Assert.HasCount(3, files);
             foreach (var file in files)
             {
                 Assert.IsTrue(File.Exists(file));
@@ -290,8 +290,8 @@ namespace BitCheck.Tests
 
             // Assert
             Assert.IsTrue(canRead);
-            Assert.IsTrue(content.Contains("世界"));
-            Assert.IsTrue(content.Contains("🌍"));
+            Assert.Contains("世界", content);
+            Assert.Contains("🌍", content);
         }
     }
 }

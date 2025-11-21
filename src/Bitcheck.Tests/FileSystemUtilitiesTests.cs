@@ -35,7 +35,7 @@ public class FileSystemUtilitiesTests
 
         var files = FileSystemUtilities.GetEligibleFiles(_testDir);
 
-        Assert.AreEqual(1, files.Length);
+        Assert.HasCount(1, files);
         Assert.AreEqual(visibleFile, files[0]);
     }
 
@@ -49,7 +49,7 @@ public class FileSystemUtilitiesTests
 
         var dirs = FileSystemUtilities.GetEligibleDirectories(_testDir);
 
-        Assert.AreEqual(1, dirs.Length);
+        Assert.HasCount(1, dirs);
         Assert.AreEqual(Path.GetFullPath(visibleDir), Path.GetFullPath(dirs[0]));
     }
 

@@ -52,7 +52,7 @@ namespace BitCheck.Tests
             var fileInfo = new FileInfo(dotFile);
 
             // Assert
-            Assert.IsTrue(fileInfo.Name.StartsWith("."), "Dot files should be considered hidden");
+            Assert.StartsWith(".", fileInfo.Name, "Dot files should be considered hidden");
         }
 
         [TestMethod]
@@ -66,7 +66,7 @@ namespace BitCheck.Tests
             var dirInfo = new DirectoryInfo(dotDir);
 
             // Assert
-            Assert.IsTrue(dirInfo.Name.StartsWith("."), "Dot directories should be considered hidden");
+            Assert.StartsWith(".", dirInfo.Name, "Dot directories should be considered hidden");
         }
 
         [TestMethod]
@@ -81,7 +81,7 @@ namespace BitCheck.Tests
 
             // Assert
             Assert.AreEqual(".bitcheck.db", fileName);
-            Assert.IsTrue(fileName.StartsWith("."), "Database file should be hidden (starts with dot)");
+            Assert.StartsWith(".", fileName, "Database file should be hidden (starts with dot)");
         }
 
         [TestMethod]
@@ -104,7 +104,7 @@ namespace BitCheck.Tests
             var attributes = File.GetAttributes(hiddenFile);
 
             // Assert
-            Assert.IsTrue((attributes & FileAttributes.Hidden) == FileAttributes.Hidden,
+            Assert.AreEqual(FileAttributes.Hidden, attributes & FileAttributes.Hidden,
                 "File should have Hidden attribute on Windows");
         }
 
@@ -119,11 +119,11 @@ namespace BitCheck.Tests
             var fileInfo = new FileInfo(regularFile);
 
             // Assert
-            Assert.IsFalse(fileInfo.Name.StartsWith("."), "Regular files should not be hidden");
+            Assert.DoesNotStartWith(".", fileInfo.Name, "Regular files should not be hidden");
             
             if (OperatingSystem.IsWindows())
             {
-                Assert.IsFalse((fileInfo.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden,
+                Assert.AreNotEqual(FileAttributes.Hidden, fileInfo.Attributes & FileAttributes.Hidden,
                     "Regular files should not have Hidden attribute");
             }
         }
@@ -139,11 +139,11 @@ namespace BitCheck.Tests
             var dirInfo = new DirectoryInfo(regularDir);
 
             // Assert
-            Assert.IsFalse(dirInfo.Name.StartsWith("."), "Regular directories should not be hidden");
+            Assert.DoesNotStartWith(".", dirInfo.Name, "Regular directories should not be hidden");
             
             if (OperatingSystem.IsWindows())
             {
-                Assert.IsFalse((dirInfo.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden,
+                Assert.AreNotEqual(FileAttributes.Hidden, dirInfo.Attributes & FileAttributes.Hidden,
                     "Regular directories should not have Hidden attribute");
             }
         }
@@ -181,8 +181,8 @@ namespace BitCheck.Tests
             var regularFiles = allFiles.Where(f => !Path.GetFileName(f).StartsWith(".")).ToArray();
 
             // Assert
-            Assert.AreEqual(2, hiddenFiles.Length, "Should detect 2 hidden files");
-            Assert.AreEqual(2, regularFiles.Length, "Should detect 2 regular files");
+            Assert.HasCount(2, hiddenFiles, "Should detect 2 hidden files");
+            Assert.HasCount(2, regularFiles, "Should detect 2 regular files");
         }
 
         [TestMethod]
@@ -198,7 +198,7 @@ namespace BitCheck.Tests
             var hiddenDirs = dirs.Where(d => new DirectoryInfo(d).Name.StartsWith(".")).ToArray();
 
             // Assert
-            Assert.AreEqual(2, hiddenDirs.Length, "Both hidden directories should be detected");
+            Assert.HasCount(2, hiddenDirs, "Both hidden directories should be detected");
         }
 
         [TestMethod]
