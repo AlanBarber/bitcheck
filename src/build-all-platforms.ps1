@@ -39,7 +39,7 @@ foreach ($platform in $platforms) {
     
     if ($LASTEXITCODE -eq 0) {
         $exeName = "BitCheck$($platform.Ext)"
-        $sourcePath = "BitCheck\bin\Release\net9.0\$($platform.RID)\publish\$exeName"
+        $sourcePath = "BitCheck\bin\Release\net10.0\$($platform.RID)\publish\$exeName"
         $destPath = "releases\bitcheck-$($platform.RID)$($platform.Ext)"
         
         if (Test-Path $sourcePath) {

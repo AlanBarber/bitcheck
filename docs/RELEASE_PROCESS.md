@@ -130,14 +130,14 @@ dotnet publish src/BitCheck/BitCheck.csproj \
   -p:PublishTrimmed=true
 ```
 
-The output will be in `src/BitCheck/bin/Release/net9.0/{runtime}/publish/`
+The output will be in `src/BitCheck/bin/Release/net10.0/{runtime}/publish/`
 
 ## Troubleshooting
 
 ### Build Fails
 
 1. Check the Actions tab for error logs
-2. Verify .NET 9.0 SDK is available
+2. Verify .NET 10.0 SDK is available
 3. Ensure all dependencies are restored
 
 ### Release Not Created

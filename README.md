@@ -475,12 +475,12 @@ A: Normal mode creates a `.bitcheck.db` file in each directory and stores only f
 - **Hash Algorithm**: XXHash64 (fast, non-cryptographic)
 - **Database**: JSON with in-memory Dictionary cache
 - **Concurrency**: Thread-safe with lock-based synchronization
-- **Platform**: Cross-platform (.NET 9.0)
-- **Testing**: 62+ unit tests with MSTest framework
+- **Platform**: Cross-platform (.NET 10.0)
+- **Testing**: 76 unit tests with MSTest framework
 
 ### Build from Source
 
-Requires .NET 9.0 SDK:
+Requires .NET 10.0 SDK:
 
 ```bash
 # Clone repository
@@ -499,8 +499,10 @@ dotnet publish src/BitCheck/BitCheck.csproj -c Release -r win-x64 --self-contain
 
 ### Test Coverage
 
-The project includes 62+ comprehensive unit tests covering:
+The project includes 76 comprehensive unit tests covering:
+- Application logic and integration scenarios
 - Database operations (CRUD, persistence, caching)
+- File system utilities and access validation
 - File hashing (XXHash64 consistency and accuracy)
 - Hidden file and directory filtering (cross-platform)
 - File access and error handling (locked files, permissions, I/O errors)

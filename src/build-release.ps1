@@ -16,7 +16,7 @@ dotnet publish BitCheck -c Release
 if ($LASTEXITCODE -eq 0) {
     Write-Host "`nBuild successful!" -ForegroundColor Green
     
-    $exePath = "BitCheck\bin\Release\net9.0\win-x64\publish\BitCheck.exe"
+    $exePath = "BitCheck\bin\Release\net10.0\win-x64\publish\BitCheck.exe"
     $fileSize = (Get-Item $exePath).Length / 1MB
     
     Write-Host "`nOutput:" -ForegroundColor Cyan

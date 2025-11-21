@@ -7,7 +7,7 @@
 .\build-release.ps1
 ```
 
-Output: `BitCheck\bin\Release\net9.0\win-x64\publish\BitCheck.exe` (~14 MB)
+Output: `BitCheck\bin\Release\net10.0\win-x64\publish\BitCheck.exe` (~14 MB)
 
 ### Manual Command
 ```powershell
@@ -76,14 +76,14 @@ Output: `releases\` folder with executables for all platforms
 
 ### Default (Windows x64)
 ```
-BitCheck\bin\Release\net9.0\win-x64\publish\
+BitCheck\bin\Release\net10.0\win-x64\publish\
 ├── BitCheck.exe    (~14 MB) ← This is what you need
 └── BitCheck.pdb    (~13 KB) ← Debug symbols (optional)
 ```
 
 ### Other Platforms
 ```
-BitCheck\bin\Release\net9.0\<runtime-id>\publish\
+BitCheck\bin\Release\net10.0\<runtime-id>\publish\
 └── BitCheck or BitCheck.exe
 ```
 
@@ -92,7 +92,7 @@ BitCheck\bin\Release\net9.0\<runtime-id>\publish\
 ### Option 1: Copy Executable
 ```powershell
 # Copy to desired location
-Copy-Item "BitCheck\bin\Release\net9.0\win-x64\publish\BitCheck.exe" "C:\Tools\"
+Copy-Item "BitCheck\bin\Release\net10.0\win-x64\publish\BitCheck.exe" "C:\Tools\"
 
 # Run from anywhere
 C:\Tools\BitCheck.exe --help
@@ -139,7 +139,7 @@ Remove from `.csproj`:
 <SelfContained>false</SelfContained>
 ```
 
-Result: ~200 KB (but requires .NET 9.0 installed)
+Result: ~200 KB (but requires .NET 10.0 installed)
 
 #### 2. Disable Ready-to-Run (Smaller but slower startup)
 Remove from `.csproj`:
@@ -240,12 +240,12 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
       - run: dotnet publish -c Release -r win-x64
       - uses: actions/upload-artifact@v3
         with:
           name: bitcheck-win-x64
-          path: BitCheck/bin/Release/net9.0/win-x64/publish/BitCheck.exe
+          path: BitCheck/bin/Release/net10.0/win-x64/publish/BitCheck.exe
 ```
 
 ## Performance Notes
@@ -256,7 +256,7 @@ jobs:
 |--------|----------------|---------------------|
 | Size | ~14 MB | ~200 KB |
 | Startup | Fast (R2R) | Fast |
-| Deployment | Copy & run | Requires .NET 9.0 |
+| Deployment | Copy & run | Requires .NET 10.0 |
 | Updates | Redeploy all | Runtime updates separate |
 
 **Recommendation:** Self-contained for maximum compatibility.

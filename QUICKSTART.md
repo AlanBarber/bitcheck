@@ -9,14 +9,14 @@ cd d:\bitcheck\src
 dotnet build -c Release
 ```
 
-Executable location: `BitCheck\bin\Release\net9.0\BitCheck.exe`
+Executable location: `BitCheck\bin\Release\net10.0\BitCheck.exe`
 
 ### 2. Add to PATH (Optional)
 
 **Windows:**
 ```powershell
 # Add to PATH for easy access
-$env:PATH += ";D:\bitcheck\src\BitCheck\bin\Release\net9.0"
+$env:PATH += ";D:\bitcheck\src\BitCheck\bin\Release\net10.0"
 ```
 
 Or copy `BitCheck.exe` to a folder already in your PATH.

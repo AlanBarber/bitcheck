@@ -8,11 +8,14 @@ The test project is located at `src/BitCheck.Tests/` and uses MSTest as the test
 
 ### Test Files
 
-- **`FileEntryTests.cs`** - Tests for the `FileEntry` data model
+- **`BitCheckApplicationTests.cs`** - Integration tests for main application logic
 - **`DatabaseServiceTests.cs`** - Tests for database operations (CRUD, persistence, caching)
+- **`FileAccessTests.cs`** - Tests for file access validation and error handling
+- **`FileEntryTests.cs`** - Tests for the `FileEntry` data model
+- **`FileSystemUtilitiesTests.cs`** - Tests for file system utility functions
 - **`HashUtilityTests.cs`** - Tests for XXHash64 file hashing functionality
 - **`HiddenFileFilterTests.cs`** - Tests for hidden file and directory detection on all platforms
-- **`FileAccessTests.cs`** - Tests for file access validation and error handling
+- **`MissingFileTests.cs`** - Tests for database operations and missing file handling
 
 ## Running Tests
 
@@ -50,11 +53,17 @@ dotnet test src/BitCheck.sln --filter "FullyQualifiedName~DatabaseService_Insert
 
 ## Test Coverage
 
-### FileEntry Tests (6 tests)
-- Default constructor initialization
-- Property setters and getters
-- Independent timestamp updates
-- Empty string handling
+### BitCheck Application Tests (9 tests)
+- **Application Logic**
+  - Recursive vs non-recursive directory processing
+  - Add/update/check operations
+  - Verbose and quiet output modes
+  - Single database vs per-directory databases
+- **Missing File Handling**
+  - Missing files with check-only retain entries
+  - Missing files with update remove entries
+- **Timestamp Operations**
+  - Creation time refresh with timestamps flag
 
 ### DatabaseService Tests (15 tests)
 - **CRUD Operations**
@@ -75,7 +84,42 @@ dotnet test src/BitCheck.sln --filter "FullyQualifiedName~DatabaseService_Insert
   - Multiple operations
   - File reload after external modification
 
-### Hash Utility Tests (10 tests)
+### File Access Tests (13 tests)
+- **Basic Access**
+  - Regular files can be read
+  - Empty files can be read
+  - Non-existent files detected
+- **File States**
+  - Read-only files can be read (Windows)
+  - Locked files handled gracefully
+  - Large files (10MB+) can be read
+- **File Types**
+  - Binary files can be read
+  - Files with special characters in names
+  - Files with Unicode content
+- **Advanced Scenarios**
+  - Multiple files with different states
+  - Files in nested directories
+  - Long path handling
+  - Multiple concurrent readers (shared read)
+
+### File Entry Tests (5 tests)
+- Default constructor initialization
+- Property setters and getters
+- Independent timestamp updates
+- Empty string handling
+
+### File System Utilities Tests (5 tests)
+- **File Filtering**
+  - Database and hidden file exclusion
+  - Hidden directory exclusion
+- **File Access Validation**
+  - Missing file detection
+  - Zero-length file allowance
+- **Hash Computation**
+  - Null return for missing files
+
+### Hash Utility Tests (9 tests)
 - **Consistency**
   - Same content produces same hash
   - Different content produces different hash
@@ -109,24 +153,21 @@ dotnet test src/BitCheck.sln --filter "FullyQualifiedName~DatabaseService_Insert
 - **Edge Cases**
   - Empty filename handling
 
-### File Access Tests (13 tests)
-- **Basic Access**
-  - Regular files can be read
-  - Empty files can be read
-  - Non-existent files detected
-- **File States**
-  - Read-only files can be read (Windows)
-  - Locked files handled gracefully
-  - Large files (10MB+) can be read
-- **File Types**
-  - Binary files can be read
-  - Files with special characters in names
-  - Files with Unicode content
-- **Advanced Scenarios**
-  - Multiple files with different states
-  - Files in nested directories
-  - Long path handling
-  - Multiple concurrent readers (shared read)
+### Missing File Tests (10 tests)
+- **Database Enumeration**
+  - Empty database handling
+  - All entries retrieval
+  - State after deletion operations
+- **Data Integrity**
+  - Returned collections are copies
+  - Persistence after flush operations
+- **Delete Operations**
+  - File removal from database
+  - Non-existent file handling
+  - Persistence of deletions
+- **Complex Operations**
+  - Multiple add/delete sequences
+  - Case-insensitive filename handling
 
 ## Test Best Practices
 
@@ -236,7 +277,7 @@ Tests use temporary files in the system temp directory:
 ## Troubleshooting
 
 ### Tests Fail to Run
-- Ensure .NET 9.0 SDK is installed
+- Ensure .NET 10.0 SDK is installed
 - Restore packages: `dotnet restore src/BitCheck.sln`
 - Clean and rebuild: `dotnet clean && dotnet build`
 

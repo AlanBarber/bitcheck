@@ -10,6 +10,9 @@
 | Weekly check (recursive) | `bitcheck -c -r` | Check entire directory tree |
 | After editing files | `bitcheck -c -u` | Check and update changed files |
 | Maintenance | `bitcheck -a -c -r` | Add new files and check existing |
+| Strict verification | `bitcheck -c -s` | Report all changes as corruption |
+| Timestamp verification | `bitcheck -c -t` | Check hash AND timestamps |
+| Single database | `bitcheck -a -r --single-db` | Use one database for entire tree |
 
 ## Detailed Scenarios
 
@@ -217,6 +220,119 @@ bitcheck --check --recursive
 
 Each directory maintains its own database, so you can check them independently.
 
+### Scenario 11: Backup Archive Verification (Strict Mode)
+
+You have backup archives that should never change and want maximum sensitivity to any modifications.
+
+```bash
+cd ~/Backups
+bitcheck --add --recursive
+
+# Later, verify backups with strict mode
+bitcheck --check --recursive --strict
+```
+
+**Output (if backup was accidentally modified):**
+```
+BitCheck - Data Integrity Monitor
+Mode: Check 
+Recursive: True
+Strict: True
+
+[MISMATCH] backup-2023.zip
+  Expected: A1B2C3D4E5F6G7H8
+  Got:      F1E2D3C4B5A69788
+  Last successful check: 2025-11-07 04:36:31 UTC
+
+=== Summary ===
+Files processed: 50
+Files checked: 50
+Mismatches: 1
+Files skipped: 0
+Time elapsed: 45.2s
+
+WARNING: 1 file(s) failed integrity check!
+```
+
+**Why strict mode?** Backups should never change. Any modification indicates a problem.
+
+### Scenario 12: Detecting File System Manipulation (Timestamp Mode)
+
+You want to detect if files have been copied, moved, or had their timestamps altered.
+
+```bash
+cd ~/SensitiveData
+bitcheck --add --recursive
+
+# Later, check with timestamp verification
+bitcheck --check --recursive --timestamps
+```
+
+**Output (if file was copied):**
+```
+BitCheck - Data Integrity Monitor
+Mode: Check 
+Recursive: True
+Timestamps: True
+
+[MISMATCH] confidential.pdf
+  Expected hash: A1B2C3D4E5F6G7H8
+  Got hash:      A1B2C3D4E5F6G7H8
+  Expected modified: 2025-11-05 12:00:00 UTC
+  Got modified:      2025-11-07 14:30:00 UTC
+  Expected created:  2025-11-01 10:00:00 UTC
+  Got created:       2025-11-07 14:30:00 UTC
+  Last successful check: 2025-11-07 04:36:31 UTC
+
+=== Summary ===
+Files processed: 25
+Files checked: 25
+Mismatches: 1
+Files skipped: 0
+Time elapsed: 8.7s
+
+WARNING: 1 file(s) failed integrity check!
+```
+
+**Why timestamp mode?** Detects file system operations that preserve content but change metadata.
+
+### Scenario 13: Portable Archive (Single Database Mode)
+
+You have a collection of files that you want to track as a single unit for easy portability.
+
+```bash
+cd ~/PortableArchive
+bitcheck --add --recursive --single-db
+
+# Move the entire folder - database stays valid
+mv ~/PortableArchive /mnt/usb/
+
+# Check integrity anywhere
+cd /mnt/usb/PortableArchive
+bitcheck --check --recursive --single-db
+```
+
+**Output:**
+```
+BitCheck - Data Integrity Monitor
+Mode: Check 
+Recursive: True
+Single Database: True
+
+[OK] documents/report.pdf
+[OK] photos/vacation.jpg
+[OK] data/spreadsheet.xlsx
+
+=== Summary ===
+Files processed: 150
+Files checked: 150
+Mismatches: 0
+Files skipped: 0
+Time elapsed: 12.3s
+```
+
+**Benefits:** One database file, relative paths, portable across systems.
+
 ## Operation Combinations
 
 ### Valid Combinations
@@ -230,6 +346,12 @@ Each directory maintains its own database, so you can check them independently.
 | `-a -u` | Add new + update changed |
 | `-c -u` | Check existing + update mismatches |
 | `-a -c -u` | Add new + check existing + update mismatches |
+| `-c -s` | Check with strict mode (no auto-updates) |
+| `-c -t` | Check with timestamp verification |
+| `-c -s -t` | Check with strict mode AND timestamps |
+| `-a -r --single-db` | Add to single database |
+| `-c -r --single-db` | Check using single database |
+| `-a -c -u -r --single-db` | Full maintenance with single database |
 
 ### Invalid Usage
 
@@ -315,6 +437,9 @@ bitcheck --add --recursive
 5. **Backup databases**: Include `.bitcheck.db` in backups
 6. **Use verbose sparingly**: Only when debugging, it generates lots of output
 7. **Test first**: Try on a small folder before running on large archives
+8. **Use strict mode for backups**: `--check --recursive --strict` for archives that shouldn't change
+9. **Use timestamp mode for security**: `--check --recursive --timestamps` to detect file system manipulation
+10. **Use single database for portability**: `--single-db` when you need to move directory trees
 
 ## Integration Examples
 
@@ -354,6 +479,27 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Integrity check passed"
+```
+
+### Backup Verification Script
+```bash
+#!/bin/bash
+# check-backup-integrity.sh
+
+set -e
+
+echo "Starting backup integrity check..."
+cd /backup/location
+bitcheck --check --recursive --strict
+
+if [ $? -ne 0 ]; then
+    echo "BACKUP INTEGRITY CHECK FAILED!" >&2
+    # Send notification
+    echo "Backup corruption detected!" | mail -s "Backup Alert" admin@example.com
+    exit 1
+fi
+
+echo "Backup integrity verified successfully"
 ```
 
 ### Python Wrapper
