@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json;
 
 namespace BitCheck.Database
@@ -185,7 +186,16 @@ namespace BitCheck.Database
                 
                 var entries = _cache.Values.ToList();
                 var json = JsonSerializer.Serialize(entries, FileEntryJsonContext.Default.ListFileEntry);
-                File.WriteAllText(_databaseFileName, json);
+                
+                // Turns out File.WriteAllText doesn't work on hidden files so we have to use a FileStream
+                // https://github.com/dotnet/runtime/issues/117757
+                // https://learn.microsoft.com/en-us/dotnet/api/system.io.file.writealltext
+                using (var stream = new FileStream(_databaseFileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
+                using (var writer = new StreamWriter(stream))
+                {
+                    writer.Write(json);
+                }
+                
                 _isDirty = false;
             }
         }

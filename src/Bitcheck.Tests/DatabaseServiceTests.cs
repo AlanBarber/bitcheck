@@ -311,7 +311,11 @@ namespace BitCheck.Tests
                     HashDate = DateTime.Now,
                     LastCheckDate = DateTime.Now
                 };
-                File.WriteAllText(_testDbPath, System.Text.Json.JsonSerializer.Serialize(new[] { entry1, entry2 }));
+                using (var stream = new FileStream(_testDbPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
+                using (var writer = new StreamWriter(stream))
+                {
+                    writer.Write(System.Text.Json.JsonSerializer.Serialize(new[] { entry1, entry2 }));
+                }
 
                 // Invalidate cache to reload
                 db.InvalidateCache();
