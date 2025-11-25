@@ -119,7 +119,8 @@ namespace BitCheck.Application
             }
 
             Console.WriteLine($"Files skipped: {_stats.FilesSkipped}");
-            Console.WriteLine($"Time elapsed: {elapsed.TotalSeconds:F2}s");
+            Console.WriteLine($"Total bytes read: {FormatBytes(_stats.TotalBytesProcessed)}");
+            Console.WriteLine($"Time elapsed: {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}");
 
             if (_stats.FilesMismatched > 0 || _stats.FilesMissing > 0)
             {
@@ -272,6 +273,11 @@ namespace BitCheck.Application
                 }
 
                 _stats.FilesProcessed++;
+                
+                // Track file size
+                var fileInfo = new FileInfo(filePath);
+                _stats.TotalBytesProcessed += fileInfo.Length;
+                
                 var existingEntry = db.GetFileEntry(databaseKey);
 
                 if (existingEntry == null)
@@ -629,6 +635,33 @@ namespace BitCheck.Application
                 Console.WriteLine($"Directory: {directory}");
                 _lastPrintedDirectory = directory;
             }
+        }
+
+        /// <summary>
+        /// Formats a byte count into a human-readable string with appropriate unit.
+        /// </summary>
+        /// <param name="bytes">The number of bytes to format.</param>
+        /// <returns>A formatted string with 2 decimal places and appropriate unit (PB, TB, GB, MB, KB, or B).</returns>
+        private static string FormatBytes(long bytes)
+        {
+            const long KB = 1024;
+            const long MB = KB * 1024;
+            const long GB = MB * 1024;
+            const long TB = GB * 1024;
+            const long PB = TB * 1024;
+
+            if (bytes >= PB)
+                return $"{bytes / (double)PB:F2} PB";
+            if (bytes >= TB)
+                return $"{bytes / (double)TB:F2} TB";
+            if (bytes >= GB)
+                return $"{bytes / (double)GB:F2} GB";
+            if (bytes >= MB)
+                return $"{bytes / (double)MB:F2} MB";
+            if (bytes >= KB)
+                return $"{bytes / (double)KB:F2} KB";
+            
+            return $"{bytes} B";
         }
 
     }

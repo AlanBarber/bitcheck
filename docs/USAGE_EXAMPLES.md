@@ -60,7 +60,8 @@ Processing: C:\Users\You\Photos\2023
 Files processed: 5234
 Files added: 5234
 Files skipped: 0
-Time elapsed: 12.45s
+Total bytes read: 52.34 GB
+Time elapsed: 00:00:12
 ```
 
 **Quarterly verification:**
@@ -200,7 +201,8 @@ Files processed: 3
 Files checked: 3
 Mismatches: 0
 Files skipped: 1
-Time elapsed: 0.08s
+Total bytes read: 2.45 MB
+Time elapsed: 00:00:00
 ```
 
 ### Scenario 10: Selective Directory Checking
@@ -249,7 +251,8 @@ Files processed: 50
 Files checked: 50
 Mismatches: 1
 Files skipped: 0
-Time elapsed: 45.2s
+Total bytes read: 125.67 MB
+Time elapsed: 00:00:45
 
 WARNING: 1 file(s) failed integrity check!
 ```
@@ -289,7 +292,8 @@ Files processed: 25
 Files checked: 25
 Mismatches: 1
 Files skipped: 0
-Time elapsed: 8.7s
+Total bytes read: 67.89 MB
+Time elapsed: 00:00:08
 
 WARNING: 1 file(s) failed integrity check!
 ```
@@ -328,7 +332,8 @@ Files processed: 150
 Files checked: 150
 Mismatches: 0
 Files skipped: 0
-Time elapsed: 12.3s
+Total bytes read: 1.23 GB
+Time elapsed: 00:00:12
 ```
 
 **Benefits:** One database file, relative paths, portable across systems.

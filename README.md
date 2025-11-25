@@ -116,7 +116,8 @@ Recursive: False
 Files processed: 3
 Files added: 3
 Files skipped: 0
-Time elapsed: 0.15s
+Total bytes read: 2.45 MB
+Time elapsed: 00:00:00
 ```
 
 **Output (recursive with multiple directories):**
@@ -137,7 +138,8 @@ Directory: /home/user/documents/photos
 Files processed: 4
 Files added: 4
 Files skipped: 0
-Time elapsed: 0.18s
+Total bytes read: 3.21 MB
+Time elapsed: 00:00:00
 ```
 
 ### Check for Corruption (Regular Use)
@@ -161,7 +163,8 @@ Files processed: 3
 Files checked: 3
 Mismatches: 0
 Files skipped: 0
-Time elapsed: 0.12s
+Total bytes read: 2.45 MB
+Time elapsed: 00:00:00
 ```
 
 **Output (intentional file change - smart mode):**
@@ -177,7 +180,8 @@ Files processed: 3
 Files checked: 3
 Mismatches: 0
 Files skipped: 0
-Time elapsed: 0.12s
+Total bytes read: 2.45 MB
+Time elapsed: 00:00:00
 ```
 
 **Output (recursive mode with changes in subdirectories):**
@@ -197,7 +201,8 @@ Files processed: 15
 Files checked: 15
 Mismatches: 0
 Files skipped: 0
-Time elapsed: 0.45s
+Total bytes read: 12.34 MB
+Time elapsed: 00:00:00
 ```
 
 **Output (corruption detected - modification date unchanged):**
@@ -217,7 +222,8 @@ Files processed: 3
 Files checked: 3
 Mismatches: 1
 Files skipped: 0
-Time elapsed: 0.12s
+Total bytes read: 2.45 MB
+Time elapsed: 00:00:00
 
 WARNING: 1 file(s) failed integrity check!
 ```
@@ -247,7 +253,8 @@ Files processed: 3
 Files checked: 3
 Mismatches: 1
 Files skipped: 0
-Time elapsed: 0.13s
+Total bytes read: 2.45 MB
+Time elapsed: 00:00:00
 
 WARNING: 1 file(s) failed integrity check!
 ```
@@ -281,7 +288,8 @@ Files processed: 3
 Files checked: 3
 Mismatches: 1
 Files skipped: 0
-Time elapsed: 0.13s
+Total bytes read: 2.45 MB
+Time elapsed: 00:00:00
 
 WARNING: 1 file(s) failed integrity check!
 ```
@@ -316,7 +324,8 @@ Single Database: True
 Files processed: 4
 Files added: 4
 Files skipped: 0
-Time elapsed: 0.12s
+Total bytes read: 3.21 MB
+Time elapsed: 00:00:00
 ```
 
 **Benefits of Single Database Mode:**
@@ -363,7 +372,8 @@ Processing: C:\MyFolder
 Files processed: 3
 Files added: 1
 Files skipped: 2
-Time elapsed: 0.08s
+Total bytes read: 1.23 MB
+Time elapsed: 00:00:00
 ```
 
 ### Maintenance Mode

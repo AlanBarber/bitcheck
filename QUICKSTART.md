@@ -53,7 +53,8 @@ BitCheck.exe --add --recursive
 # Files processed: 150
 # Files added: 150
 # Files skipped: 0
-# Time elapsed: 0.45s
+# Total bytes read: 1.23 GB
+# Time elapsed: 00:00:00
 ```
 
 ### 4. Regular Check (Weekly/Monthly)
@@ -68,7 +69,8 @@ BitCheck.exe --check --recursive
 # Files checked: 150
 # Mismatches: 0
 # Files skipped: 0
-# Time elapsed: 0.42s
+# Total bytes read: 1.23 GB
+# Time elapsed: 00:00:00
 
 # Output if corruption detected:
 # 
@@ -86,7 +88,8 @@ BitCheck.exe --check --recursive
 # Files checked: 150
 # Mismatches: 1
 # Files skipped: 0
-# Time elapsed: 0.42s
+# Total bytes read: 1.23 GB
+# Time elapsed: 00:00:00
 # 
 # WARNING: 1 file(s) failed integrity check!
 ```

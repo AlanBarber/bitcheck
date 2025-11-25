@@ -8,41 +8,46 @@ namespace BitCheck.Application
         /// <summary>
         /// Total number of files successfully processed (hashed/checked).
         /// </summary>
-        public int FilesProcessed { get; set; }
+        public long FilesProcessed { get; set; }
 
         /// <summary>
         /// Number of new entries inserted into the database.
         /// </summary>
-        public int FilesAdded { get; set; }
+        public long FilesAdded { get; set; }
 
         /// <summary>
         /// Number of existing entries whose hashes were updated.
         /// </summary>
-        public int FilesUpdated { get; set; }
+        public long FilesUpdated { get; set; }
 
         /// <summary>
         /// Files compared against existing hashes.
         /// </summary>
-        public int FilesChecked { get; set; }
+        public long FilesChecked { get; set; }
 
         /// <summary>
         /// Files that failed integrity verification.
         /// </summary>
-        public int FilesMismatched { get; set; }
+        public long FilesMismatched { get; set; }
 
         /// <summary>
         /// Files skipped due to errors, inaccessibility, or user options.
         /// </summary>
-        public int FilesSkipped { get; set; }
+        public long FilesSkipped { get; set; }
 
         /// <summary>
         /// Database entries pointing to files that no longer exist on disk.
         /// </summary>
-        public int FilesMissing { get; set; }
+        public long FilesMissing { get; set; }
 
         /// <summary>
         /// Database entries removed because the backing files were missing.
         /// </summary>
-        public int FilesRemoved { get; set; }
+        public long FilesRemoved { get; set; }
+
+        /// <summary>
+        /// Total size in bytes of all files processed.
+        /// </summary>
+        public long TotalBytesProcessed { get; set; }
     }
 }
