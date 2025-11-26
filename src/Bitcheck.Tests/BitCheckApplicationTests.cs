@@ -416,4 +416,89 @@ public class BitCheckApplicationTests
         var entry = db.GetFileEntry(Path.GetFileName(filePath));
         Assert.IsNull(entry, "Entry should be removed when update is true");
     }
+
+    [TestMethod]
+    public void AddOnly_SkipsExistingFilesWithoutHashing()
+    {
+        // Arrange: create file and add to database
+        var filePath = Path.Combine(_testDir, "existing.txt");
+        File.WriteAllText(filePath, "original content");
+
+        var addOptions = new AppOptions(
+            Recursive: false,
+            Add: true,
+            Update: false,
+            Check: false,
+            Verbose: true,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: true);
+
+        RunApp(addOptions, _testDir);
+
+        // Verify file was added
+        var dbPath = Path.Combine(_testDir, BitCheckConstants.DatabaseFileName);
+        string originalHash;
+        using (var db = new DatabaseService(dbPath))
+        {
+            var entry = db.GetFileEntry(Path.GetFileName(filePath));
+            Assert.IsNotNull(entry, "File should be added initially");
+            originalHash = entry.Hash;
+        }
+
+        // Act: run --add again (without --check or --update)
+        using var capture = new StringWriter();
+        RunApp(addOptions, _testDir, capture);
+        var output = capture.ToString();
+
+        // Assert: file should be skipped (not re-hashed)
+        StringAssert.Contains(output, "[SKIP]", "Existing file should be skipped on second --add run");
+        StringAssert.Contains(output, "Already in database", "Skip message should indicate file is already tracked");
+
+        // Verify hash unchanged (proves file wasn't re-processed)
+        using (var db = new DatabaseService(dbPath))
+        {
+            var entry = db.GetFileEntry(Path.GetFileName(filePath));
+            Assert.AreEqual(originalHash, entry!.Hash, "Hash should remain unchanged");
+        }
+    }
+
+    [TestMethod]
+    public void AddWithCheck_DoesNotSkipExistingFiles()
+    {
+        // Arrange: create file and add to database
+        var filePath = Path.Combine(_testDir, "checked.txt");
+        File.WriteAllText(filePath, "content");
+
+        var addOptions = new AppOptions(
+            Recursive: false,
+            Add: true,
+            Update: false,
+            Check: false,
+            Verbose: true,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: true);
+
+        RunApp(addOptions, _testDir);
+
+        // Act: run --add --check (should NOT skip existing files)
+        var addCheckOptions = new AppOptions(
+            Recursive: false,
+            Add: true,
+            Update: false,
+            Check: true,
+            Verbose: true,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: true);
+
+        using var capture = new StringWriter();
+        RunApp(addCheckOptions, _testDir, capture);
+        var output = capture.ToString();
+
+        // Assert: file should be checked (OK), not skipped
+        StringAssert.Contains(output, "[OK]", "Existing file should be checked when --check is specified");
+        Assert.DoesNotContain("Already in database", output, "File should not be skipped when --check is active");
+    }
 }

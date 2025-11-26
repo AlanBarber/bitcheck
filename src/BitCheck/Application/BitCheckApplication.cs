@@ -10,6 +10,7 @@ namespace BitCheck.Application
     {
         private readonly AppOptions _options;
         private readonly ProcessingStats _stats = new();
+        private readonly CancellationTokenSource _cts = new();
         private string? _lastPrintedDirectory;
 
         /// <summary>
@@ -26,6 +27,7 @@ namespace BitCheck.Application
         /// </summary>
         public void Run()
         {
+            Console.CancelKeyPress += OnCancelKeyPress;
             try
             {
                 if (!ValidateOperations())
@@ -40,10 +42,30 @@ namespace BitCheck.Application
 
                 WriteSummary(DateTime.UtcNow - startTime);
             }
+            catch (OperationCanceledException)
+            {
+                // Expected when user cancels - summary already shown in handler
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
             }
+            finally
+            {
+                Console.CancelKeyPress -= OnCancelKeyPress;
+                _cts.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Handles the Ctrl+C key press event.
+        /// </summary>
+        private void OnCancelKeyPress(object? sender, ConsoleCancelEventArgs e)
+        {
+            e.Cancel = true; // Prevent immediate termination
+            _cts.Cancel();
+            Console.WriteLine();
+            Console.WriteLine("Cancellation requested. Finishing current operation...");
         }
 
         /// <summary>
@@ -98,7 +120,14 @@ namespace BitCheck.Application
         private void WriteSummary(TimeSpan elapsed)
         {
             Console.WriteLine();
-            Console.WriteLine("=== Summary ===");
+            if (_cts.IsCancellationRequested)
+            {
+                Console.WriteLine("=== Summary (Cancelled) ===");
+            }
+            else
+            {
+                Console.WriteLine("=== Summary ===");
+            }
             Console.WriteLine($"Files processed: {_stats.FilesProcessed}");
             if (_options.Add) Console.WriteLine($"Files added: {_stats.FilesAdded}");
             if (_options.Update) Console.WriteLine($"Files updated: {_stats.FilesUpdated}");
@@ -156,7 +185,7 @@ namespace BitCheck.Application
                 using var db = new DatabaseService(dbPath);
                 ProcessDirectory(fullRootPath, fullRootPath, db);
 
-                if (_options.Check || _options.Update)
+                if (!_cts.IsCancellationRequested && (_options.Check || _options.Update))
                 {
                     CheckForMissingFilesSingleDb(db, fullRootPath);
                 }
@@ -192,6 +221,11 @@ namespace BitCheck.Application
             {
                 foreach (var file in files)
                 {
+                    if (_cts.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     var fullFilePath = Path.GetFullPath(file);
                     var databaseKey = useRelativePaths
                         ? Path.GetRelativePath(rootPath, fullFilePath)
@@ -204,7 +238,7 @@ namespace BitCheck.Application
                     ProcessFile(database, file, databaseKey, displayName);
                 }
 
-                if (ownsDatabase && (_options.Check || _options.Update))
+                if (!_cts.IsCancellationRequested && ownsDatabase && (_options.Check || _options.Update))
                 {
                     CheckForMissingFiles(database, fullPath, files);
                 }
@@ -218,10 +252,15 @@ namespace BitCheck.Application
                 }
             }
 
-            if (_options.Recursive)
+            if (_options.Recursive && !_cts.IsCancellationRequested)
             {
                 foreach (var subdir in FileSystemUtilities.GetEligibleDirectories(fullPath))
                 {
+                    if (_cts.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     ProcessDirectory(rootPath, subdir, sharedDatabase);
                 }
             }
@@ -249,6 +288,20 @@ namespace BitCheck.Application
         {
             try
             {
+                var existingEntry = db.GetFileEntry(databaseKey);
+
+                // Fast path: if only --add is set (no --check or --update), skip files already in DB
+                if (existingEntry != null && _options.Add && !_options.Check && !_options.Update)
+                {
+                    if (_options.Verbose)
+                    {
+                        Console.WriteLine($"[SKIP] {displayName} - Already in database");
+                    }
+
+                    _stats.FilesSkipped++;
+                    return;
+                }
+
                 if (!FileSystemUtilities.CanReadFile(filePath, out var errorReason))
                 {
                     if (_options.Verbose)
@@ -277,8 +330,6 @@ namespace BitCheck.Application
                 // Track file size
                 var fileInfo = new FileInfo(filePath);
                 _stats.TotalBytesProcessed += fileInfo.Length;
-                
-                var existingEntry = db.GetFileEntry(databaseKey);
 
                 if (existingEntry == null)
                 {
