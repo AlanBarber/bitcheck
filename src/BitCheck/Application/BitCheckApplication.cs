@@ -28,14 +28,13 @@ namespace BitCheck.Application
         public void Run()
         {
             Console.CancelKeyPress += OnCancelKeyPress;
+            var startTime = DateTime.UtcNow;
             try
             {
                 if (!ValidateOperations())
                 {
                     return;
                 }
-
-                var startTime = DateTime.UtcNow;
                 WriteHeader();
 
                 ProcessDatabases(".");
@@ -44,7 +43,8 @@ namespace BitCheck.Application
             }
             catch (OperationCanceledException)
             {
-                // Expected when user cancels - summary already shown in handler
+                // Expected when user cancels - show summary with partial results
+                WriteSummary(DateTime.UtcNow - startTime);
             }
             catch (Exception ex)
             {
