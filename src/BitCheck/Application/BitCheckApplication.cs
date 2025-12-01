@@ -313,7 +313,7 @@ namespace BitCheck.Application
                     return;
                 }
 
-                var currentHash = FileSystemUtilities.ComputeHash(filePath);
+                var currentHash = FileSystemUtilities.ComputeHash(filePath, _cts.Token);
                 if (currentHash == null)
                 {
                     if (_options.Verbose)
@@ -339,6 +339,10 @@ namespace BitCheck.Application
                 {
                     HandleExistingEntry(db, existingEntry, filePath, displayName, currentHash);
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                throw; // Re-throw to allow clean cancellation
             }
             catch (UnauthorizedAccessException)
             {
@@ -413,7 +417,7 @@ namespace BitCheck.Application
         /// <param name="currentHash">The current hash of the file.</param>
         private void HandleExistingEntry(IDatabaseService db, FileEntry existingEntry, string filePath, string displayName, string currentHash)
         {
-            bool hashMatches = existingEntry.Hash == currentHash;
+            bool hashMatches = string.Equals(existingEntry.Hash, currentHash, StringComparison.OrdinalIgnoreCase);
             bool needsTimestampInfo = _options.Timestamps && (_options.Check || _options.Update);
             FileInfo? fileInfo = needsTimestampInfo ? new FileInfo(filePath) : null;
             DateTime currentModified = fileInfo?.LastWriteTimeUtc ?? default;

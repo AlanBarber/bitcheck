@@ -128,16 +128,30 @@ namespace BitCheck.Application
         /// Computes the XXHash64 hash of the specified file.
         /// </summary>
         /// <param name="path">Absolute or relative file path.</param>
+        /// <param name="cancellationToken">Optional cancellation token to abort the operation.</param>
         /// <returns>A hex string when successful; otherwise <c>null</c>.</returns>
-        public static string? ComputeHash(string path)
+        public static string? ComputeHash(string path, CancellationToken cancellationToken = default)
         {
             try
             {
                 using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
                 var hasher = new XxHash64();
-                hasher.Append(fileStream);
+                
+                // Read in chunks to allow cancellation during large file hashing
+                var buffer = new byte[81920]; // 80KB buffer
+                int bytesRead;
+                while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    hasher.Append(buffer.AsSpan(0, bytesRead));
+                }
+                
                 var rawHash = hasher.GetCurrentHash();
                 return Convert.ToHexString(rawHash);
+            }
+            catch (OperationCanceledException)
+            {
+                throw; // Re-throw cancellation to caller
             }
             catch
             {

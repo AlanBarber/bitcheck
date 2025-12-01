@@ -175,9 +175,16 @@ namespace BitCheck.Database
                     .Where(e => !string.IsNullOrEmpty(e.FileName))
                     .ToDictionary(e => e.FileName!, e => e);
             }
-            catch (Exception)
+            catch (FileNotFoundException)
             {
-                // If there's any error reading or deserializing, start with empty cache
+                // New database - this is expected
+                _cache = new Dictionary<string, FileEntry>();
+            }
+            catch (Exception ex)
+            {
+                // Warn user that existing database couldn't be loaded
+                Console.Error.WriteLine($"Warning: Could not load database '{_databaseFileName}': {ex.Message}");
+                Console.Error.WriteLine("Starting with empty database. Existing entries may be lost.");
                 _cache = new Dictionary<string, FileEntry>();
             }
         }
@@ -198,8 +205,9 @@ namespace BitCheck.Database
                 // https://github.com/dotnet/runtime/issues/117757
                 // https://learn.microsoft.com/en-us/dotnet/api/system.io.file.writealltext
                 using (var stream = new FileStream(_databaseFileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
-                using (var writer = new StreamWriter(stream))
                 {
+                    stream.SetLength(0); // Truncate to avoid leftover bytes from previous content
+                    using var writer = new StreamWriter(stream);
                     writer.Write(json);
                 }
                 
