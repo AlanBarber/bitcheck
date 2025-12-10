@@ -14,7 +14,7 @@ BitCheck is a fast, cross-platform CLI tool that detects file corruption by trac
 ## Why BitCheck?
 
 - 🛡️ **Detect corruption early** - Find bitrot before it's too late
-- ⚡ **Lightning fast** - Processes thousands of files in seconds
+- ⚡ **Lightning fast** - Uses the extremely fast XxHash64 to validate files
 - 🎯 **Simple to use** - Just three commands: add, check, update
 - 🧠 **Smart checking** - Automatically distinguishes intentional edits from corruption
 - 🔒 **Safe & reliable** - Gracefully handles locked files and permission issues
@@ -465,7 +465,7 @@ A: Yes! Run `bitcheck --add --recursive` after creating a backup, then check it 
 A: No. BitCheck only reads files to compute hashes. It never modifies your data.
 
 **Q: What's the performance impact?**  
-A: Minimal. XXHash64 is 10x faster than MD5 and 20x faster than SHA-256, with very low memory usage.
+A: Minimal. In benchmarks XXHash64 is 4x faster than Blake3, 7x faster than SHA256 and 20x faster than MD5, with very low memory usage. In most cases you can expect to be limited only by the speed of your storage, not CPU usage.
 
 **Q: What happens to deleted files?**  
 A: During `--check`, deleted files are reported as `[MISSING]`. Use `--update` to remove them from the database.
