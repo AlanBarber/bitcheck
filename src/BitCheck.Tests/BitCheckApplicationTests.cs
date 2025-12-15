@@ -881,7 +881,12 @@ public class BitCheckApplicationTests
 
         var dbPath = Path.Combine(_testDir, BitCheckConstants.DatabaseFileName);
         using var db = new DatabaseService(dbPath);
-        var expectedKey = Path.GetRelativePath(_testDir, filePath);
+
+        // Use the same path resolution the application uses to ensure consistency
+        var rootPath = Path.GetFullPath(_testDir);
+        var fullFilePath = Path.GetFullPath(filePath);
+        var expectedKey = Path.GetRelativePath(rootPath, fullFilePath);
+
         var entry = db.GetFileEntry(expectedKey);
         Assert.IsNotNull(entry, $"File should be stored with relative key: {expectedKey}");
     }
