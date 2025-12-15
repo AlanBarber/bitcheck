@@ -1,5 +1,6 @@
 using BitCheck.Application;
 using BitCheck.Database;
+using System.Text;
 namespace BitCheck.Tests;
 
 [TestClass]
@@ -887,8 +888,28 @@ public class BitCheckApplicationTests
         var fullFilePath = Path.GetFullPath(filePath);
         var expectedKey = Path.GetRelativePath(rootPath, fullFilePath);
 
+        // Diagnostic output for debugging macOS path resolution issues
+        var allEntries = db.GetAllEntries().ToList();
+        var diagnosticInfo = new StringBuilder();
+        diagnosticInfo.AppendLine("=== DIAGNOSTIC INFO ===");
+        diagnosticInfo.AppendLine($"OS: {Environment.OSVersion}");
+        diagnosticInfo.AppendLine($"_testDir (raw): {_testDir}");
+        diagnosticInfo.AppendLine($"_testDir (GetFullPath): {rootPath}");
+        diagnosticInfo.AppendLine($"filePath (raw): {filePath}");
+        diagnosticInfo.AppendLine($"filePath (GetFullPath): {fullFilePath}");
+        diagnosticInfo.AppendLine($"expectedKey: {expectedKey}");
+        diagnosticInfo.AppendLine($"dbPath: {dbPath}");
+        diagnosticInfo.AppendLine($"Database entry count: {allEntries.Count}");
+        diagnosticInfo.AppendLine("Database entries:");
+        foreach (var e in allEntries)
+        {
+            diagnosticInfo.AppendLine($"  Key: '{e.FileName}'");
+        }
+        diagnosticInfo.AppendLine($"App output: {output}");
+        diagnosticInfo.AppendLine("=== END DIAGNOSTIC INFO ===");
+
         var entry = db.GetFileEntry(expectedKey);
-        Assert.IsNotNull(entry, $"File should be stored with relative key: {expectedKey}");
+        Assert.IsNotNull(entry, diagnosticInfo.ToString());
     }
 
     [TestMethod]
@@ -946,12 +967,8 @@ public class BitCheckApplicationTests
         Assert.IsNotNull(entry, "File should be added");
 
         var fileInfo = new FileInfo(filePath);
-        Assert.AreEqual(fileInfo.LastWriteTimeUtc.ToString("yyyy-MM-dd HH:mm:ss"),
-            entry.LastModified.ToString("yyyy-MM-dd HH:mm:ss"),
-            "Modified time should be tracked");
-        Assert.AreEqual(fileInfo.CreationTimeUtc.ToString("yyyy-MM-dd HH:mm:ss"),
-            entry.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss"),
-            "Created time should be tracked");
+        Assert.AreEqual(fileInfo.LastWriteTimeUtc.ToString("yyyy-MM-dd HH:mm:ss"), entry.LastModified.ToString("yyyy-MM-dd HH:mm:ss"), "Modified time should be tracked");
+        Assert.AreEqual(fileInfo.CreationTimeUtc.ToString("yyyy-MM-dd HH:mm:ss"), entry.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss"), "Created time should be tracked");
     }
 
     [TestMethod]
