@@ -36,6 +36,8 @@ namespace BitCheck
         private static Option<bool> _singleDbOption = null!;
         private static Option<string?> _fileOption = null!;
         private static Option<bool> _deleteOption = null!;
+        private static Option<bool> _infoOption = null!;
+        private static Option<bool> _listOption = null!;
 
         /// <summary>
         /// Builds the root System.CommandLine command that drives BitCheck.
@@ -62,6 +64,10 @@ namespace BitCheck
             _fileOption.AddAlias("-f");
             _deleteOption = new Option<bool>("--delete", "Delete the file record from the database (only valid with --file)");
             _deleteOption.AddAlias("-d");
+            _infoOption = new Option<bool>("--info", "Show database information for a single file (only valid with --file)");
+            _infoOption.AddAlias("-i");
+            _listOption = new Option<bool>("--list", "List all files tracked in the database");
+            _listOption.AddAlias("-l");
 
             var rootCommand = new RootCommand
             {
@@ -74,7 +80,9 @@ namespace BitCheck
                 _timestampsOption,
                 _singleDbOption,
                 _fileOption,
-                _deleteOption
+                _deleteOption,
+                _infoOption,
+                _listOption
             };
 
             rootCommand.Description = @"
@@ -110,7 +118,9 @@ namespace BitCheck
                 context.ParseResult.GetValueForOption(_timestampsOption),
                 context.ParseResult.GetValueForOption(_singleDbOption),
                 context.ParseResult.GetValueForOption(_fileOption),
-                context.ParseResult.GetValueForOption(_deleteOption));
+                context.ParseResult.GetValueForOption(_deleteOption),
+                context.ParseResult.GetValueForOption(_infoOption),
+                context.ParseResult.GetValueForOption(_listOption));
 
             new BitCheckApplication(options).Run();
         }

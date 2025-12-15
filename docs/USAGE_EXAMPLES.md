@@ -17,6 +17,9 @@
 | Single file check | `bitcheck -f file.txt -c` | Check specific file for corruption |
 | Single file update | `bitcheck -f file.txt -u` | Update specific file hash |
 | Remove from database | `bitcheck -f file.txt -d` | Delete file record from database |
+| File info | `bitcheck -f file.txt -i` | Show database info for a file |
+| List tracked files | `bitcheck -l` | List all files in database |
+| List recursive | `bitcheck -l -r` | List files in all directories |
 
 ## Detailed Scenarios
 
@@ -421,7 +424,11 @@ Time elapsed: 00:00:12
 | `-f file.txt -c` | Check single file |
 | `-f file.txt -u` | Update single file |
 | `-f file.txt -d` | Delete single file from database |
+| `-f file.txt -i` | Show info for single file |
 | `-f file.txt -c --single-db` | Check single file using single database |
+| `-l` | List tracked files in current directory |
+| `-l -r` | List tracked files recursively |
+| `-l --single-db` | List files in single database |
 
 ### Invalid Usage
 
@@ -445,6 +452,14 @@ bitcheck --file test.txt --delete --add
 # ERROR: --recursive cannot be used with --file
 bitcheck --file test.txt --check --recursive
 # Single file mode processes only one file, not directories
+
+# ERROR: --info requires --file
+bitcheck --info
+# Must specify a file with --file when using --info
+
+# ERROR: --list cannot be used with --file
+bitcheck --file test.txt --list
+# List mode shows all files, not a single file
 ```
 
 ## Understanding Output Tags
@@ -457,6 +472,9 @@ bitcheck --file test.txt --check --recursive
 - `[SKIP]` - File skipped (various reasons, shown in verbose)
 - `[DELETED]` - File record removed from database (with --file --delete)
 - `[NOT FOUND]` - File not in database (when trying to delete)
+- `[TRACKED]` - File is tracked in database (with --info)
+- `[NOT TRACKED]` - File is not in database (with --info)
+- `[MISSING]` - File in database but not on disk (with --list)
 - `[ERROR]` - Error processing file
 
 ## Performance Tips
@@ -526,6 +544,8 @@ bitcheck --add --recursive
 10. **Use single database for portability**: `--single-db` when you need to move directory trees
 11. **Use single file mode for targeted operations**: `--file` when you only need to process specific files
 12. **Use delete to clean up**: `--file --delete` to remove obsolete entries without deleting actual files
+13. **Use info to check status**: `--file --info` to see if a file is tracked and its database details
+14. **Use list to audit**: `--list` to see all files currently tracked in the database
 
 ## Integration Examples
 

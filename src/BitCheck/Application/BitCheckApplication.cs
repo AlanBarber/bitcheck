@@ -37,6 +37,13 @@ namespace BitCheck.Application
                 }
                 WriteHeader();
 
+                // Handle list mode (no file, shows all tracked files)
+                if (_options.List)
+                {
+                    ListTrackedFiles();
+                    return;
+                }
+
                 if (!string.IsNullOrEmpty(_options.File))
                 {
                     ProcessSingleFile(_options.File);
@@ -89,10 +96,42 @@ namespace BitCheck.Application
                 return false;
             }
 
-            // --delete cannot be combined with other operations
-            if (_options.Delete && (_options.Add || _options.Update || _options.Check))
+            // --info is only valid with --file
+            if (_options.Info && string.IsNullOrEmpty(_options.File))
             {
-                Console.WriteLine("Error: --delete cannot be combined with --add, --update, or --check.");
+                Console.WriteLine("Error: --info can only be used with --file.");
+                Console.WriteLine("Use --help for usage information.");
+                return false;
+            }
+
+            // --delete cannot be combined with other operations
+            if (_options.Delete && (_options.Add || _options.Update || _options.Check || _options.Info || _options.List))
+            {
+                Console.WriteLine("Error: --delete cannot be combined with other operations.");
+                Console.WriteLine("Use --help for usage information.");
+                return false;
+            }
+
+            // --info cannot be combined with other operations
+            if (_options.Info && (_options.Add || _options.Update || _options.Check || _options.Delete || _options.List))
+            {
+                Console.WriteLine("Error: --info cannot be combined with other operations.");
+                Console.WriteLine("Use --help for usage information.");
+                return false;
+            }
+
+            // --list cannot be combined with other operations
+            if (_options.List && (_options.Add || _options.Update || _options.Check || _options.Delete || _options.Info))
+            {
+                Console.WriteLine("Error: --list cannot be combined with other operations.");
+                Console.WriteLine("Use --help for usage information.");
+                return false;
+            }
+
+            // --list cannot be used with --file
+            if (_options.List && !string.IsNullOrEmpty(_options.File))
+            {
+                Console.WriteLine("Error: --list cannot be used with --file.");
                 Console.WriteLine("Use --help for usage information.");
                 return false;
             }
@@ -105,8 +144,8 @@ namespace BitCheck.Application
                 return false;
             }
 
-            // In delete mode, no other operation is needed
-            if (_options.Delete)
+            // In delete, info, or list mode, no other operation is needed
+            if (_options.Delete || _options.Info || _options.List)
             {
                 return true;
             }
@@ -116,7 +155,7 @@ namespace BitCheck.Application
                 return true;
             }
 
-            Console.WriteLine("Error: At least one operation (--add, --update, --check, or --delete with --file) must be specified.");
+            Console.WriteLine("Error: At least one operation (--add, --update, --check, --delete, --info, or --list) must be specified.");
             Console.WriteLine("Use --help for usage information.");
             return false;
         }
@@ -150,11 +189,13 @@ namespace BitCheck.Application
         /// <returns>A string representing the mode description.</returns>
         private string BuildModeDescription()
         {
-            var modes = new List<string>(4);
+            var modes = new List<string>(6);
             if (_options.Add) modes.Add("Add");
             if (_options.Update) modes.Add("Update");
             if (_options.Check) modes.Add("Check");
             if (_options.Delete) modes.Add("Delete");
+            if (_options.Info) modes.Add("Info");
+            if (_options.List) modes.Add("List");
             return modes.Count == 0 ? "None" : string.Join(' ', modes);
         }
 
@@ -245,7 +286,22 @@ namespace BitCheck.Application
                 databaseKey = fileName;
             }
 
+            // For info mode, database doesn't need to exist
+            if (_options.Info && !File.Exists(dbPath))
+            {
+                Console.WriteLine($"[NOT TRACKED] {fileName}");
+                Console.WriteLine("  No database found in this location.");
+                return;
+            }
+
             using var db = new DatabaseService(dbPath);
+
+            // Handle info mode
+            if (_options.Info)
+            {
+                ShowFileInfo(db, databaseKey, fileName, fullFilePath);
+                return;
+            }
 
             // Handle delete mode
             if (_options.Delete)
@@ -285,6 +341,137 @@ namespace BitCheck.Application
             db.DeleteFileEntry(databaseKey);
             Console.WriteLine($"[DELETED] {displayName} - Removed from database");
             _stats.FilesRemoved++;
+        }
+
+        /// <summary>
+        /// Shows information about a file from the database.
+        /// </summary>
+        /// <param name="db">The database service to use.</param>
+        /// <param name="databaseKey">The database key for the file.</param>
+        /// <param name="displayName">The display name for the file.</param>
+        /// <param name="fullFilePath">The full path to the file.</param>
+        private void ShowFileInfo(IDatabaseService db, string databaseKey, string displayName, string fullFilePath)
+        {
+            var entry = db.GetFileEntry(databaseKey);
+            if (entry == null)
+            {
+                Console.WriteLine($"[NOT TRACKED] {displayName}");
+                Console.WriteLine("  File is not in the database.");
+                return;
+            }
+
+            Console.WriteLine($"[TRACKED] {displayName}");
+            Console.WriteLine($"  Hash:          {entry.Hash}");
+            Console.WriteLine($"  Hash Date:     {entry.HashDate:yyyy-MM-dd HH:mm:ss} UTC");
+            Console.WriteLine($"  Last Check:    {entry.LastCheckDate:yyyy-MM-dd HH:mm:ss} UTC");
+            Console.WriteLine($"  Last Modified: {entry.LastModified:yyyy-MM-dd HH:mm:ss} UTC");
+            Console.WriteLine($"  Created Date:  {entry.CreatedDate:yyyy-MM-dd HH:mm:ss} UTC");
+
+            // Show current file status if file exists
+            if (File.Exists(fullFilePath))
+            {
+                var fileInfo = new FileInfo(fullFilePath);
+                Console.WriteLine();
+                Console.WriteLine("  Current File Status:");
+                Console.WriteLine($"    Size:        {FormatBytes(fileInfo.Length)}");
+                Console.WriteLine($"    Modified:    {fileInfo.LastWriteTimeUtc:yyyy-MM-dd HH:mm:ss} UTC");
+                Console.WriteLine($"    Created:     {fileInfo.CreationTimeUtc:yyyy-MM-dd HH:mm:ss} UTC");
+
+                // Check if timestamps match
+                bool modifiedMatch = entry.LastModified.ToString("yyyy-MM-dd HH:mm:ss") == fileInfo.LastWriteTimeUtc.ToString("yyyy-MM-dd HH:mm:ss");
+                bool createdMatch = entry.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss") == fileInfo.CreationTimeUtc.ToString("yyyy-MM-dd HH:mm:ss");
+
+                if (!modifiedMatch || !createdMatch)
+                {
+                    Console.WriteLine("    Timestamps:  Changed since last hash");
+                }
+                else
+                {
+                    Console.WriteLine("    Timestamps:  Match database");
+                }
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine("  Current File Status: FILE NOT FOUND");
+            }
+        }
+
+        /// <summary>
+        /// Lists all files tracked in the database(s).
+        /// </summary>
+        private void ListTrackedFiles()
+        {
+            var rootPath = Path.GetFullPath(".");
+
+            if (_options.SingleDatabase)
+            {
+                var dbPath = Path.Combine(rootPath, BitCheckConstants.DatabaseFileName);
+                if (!File.Exists(dbPath))
+                {
+                    Console.WriteLine("No database found.");
+                    return;
+                }
+
+                using var db = new DatabaseService(dbPath);
+                var entries = db.GetAllEntries().OrderBy(e => e.FileName).ToList();
+
+                Console.WriteLine($"Database: {dbPath}");
+                Console.WriteLine($"Total files tracked: {entries.Count}");
+                Console.WriteLine();
+
+                foreach (var entry in entries)
+                {
+                    var fullPath = Path.Combine(rootPath, entry.FileName);
+                    var exists = File.Exists(fullPath);
+                    var status = exists ? "" : " [MISSING]";
+                    Console.WriteLine($"  {entry.FileName}{status}");
+                }
+            }
+            else
+            {
+                ListTrackedFilesRecursive(rootPath);
+            }
+        }
+
+        /// <summary>
+        /// Recursively lists tracked files from per-directory databases.
+        /// </summary>
+        /// <param name="directoryPath">The directory to process.</param>
+        private void ListTrackedFilesRecursive(string directoryPath)
+        {
+            var dbPath = Path.Combine(directoryPath, BitCheckConstants.DatabaseFileName);
+
+            if (File.Exists(dbPath))
+            {
+                using var db = new DatabaseService(dbPath);
+                var entries = db.GetAllEntries().OrderBy(e => e.FileName).ToList();
+
+                if (entries.Count > 0)
+                {
+                    Console.WriteLine($"Directory: {directoryPath}");
+                    Console.WriteLine($"  Files tracked: {entries.Count}");
+
+                    foreach (var entry in entries)
+                    {
+                        var fullPath = Path.Combine(directoryPath, entry.FileName);
+                        var exists = File.Exists(fullPath);
+                        var status = exists ? "" : " [MISSING]";
+                        Console.WriteLine($"    {entry.FileName}{status}");
+                    }
+
+                    Console.WriteLine();
+                }
+            }
+
+            // Process subdirectories if recursive
+            if (_options.Recursive)
+            {
+                foreach (var subdir in FileSystemUtilities.GetEligibleDirectories(directoryPath))
+                {
+                    ListTrackedFilesRecursive(subdir);
+                }
+            }
         }
 
         /// <summary>
@@ -543,8 +730,7 @@ namespace BitCheck.Application
             FileInfo? fileInfo = needsTimestampInfo ? new FileInfo(filePath) : null;
             DateTime currentModified = fileInfo?.LastWriteTimeUtc ?? default;
             DateTime currentCreated = fileInfo?.CreationTimeUtc ?? default;
-            bool timestampMismatch = _options.Timestamps && fileInfo != null &&
-                                      !TimestampsMatch(existingEntry, currentModified, currentCreated);
+            bool timestampMismatch = _options.Timestamps && fileInfo != null && !TimestampsMatch(existingEntry, currentModified, currentCreated);
 
             if (_options.Check)
             {
@@ -730,9 +916,7 @@ namespace BitCheck.Application
         /// <param name="existingFiles">The existing files in the directory.</param>
         private void CheckForMissingFiles(IDatabaseService db, string directoryPath, string[] existingFiles)
         {
-            var existingFileNames = new HashSet<string>(
-                existingFiles.Select(f => Path.GetFileName(f)),
-                StringComparer.OrdinalIgnoreCase);
+            var existingFileNames = new HashSet<string>(existingFiles.Select(f => Path.GetFileName(f)), StringComparer.OrdinalIgnoreCase);
 
             foreach (var entry in db.GetAllEntries())
             {

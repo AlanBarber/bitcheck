@@ -78,7 +78,9 @@ public class BitCheckApplicationTests
             Timestamps: true,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(appOptions, _testDir);
 
@@ -108,7 +110,9 @@ public class BitCheckApplicationTests
             Timestamps: true,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
         RunApp(appOptions, _testDir);
 
         FileEntry updatedEntry;
@@ -144,7 +148,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(options, _testDir);
 
@@ -175,7 +181,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(options, _testDir);
 
@@ -201,7 +209,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         using var verboseCapture = new StringWriter();
         RunApp(verboseOptions, _testDir, verboseCapture);
@@ -225,7 +235,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(quietOptions, _testDir, capture);
@@ -248,7 +260,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(addOptions, workingDir);
 
@@ -275,7 +289,9 @@ public class BitCheckApplicationTests
             Timestamps: true,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(options, workingDir, capture);
@@ -303,7 +319,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(options, _testDir);
 
@@ -339,7 +357,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(options, _testDir);
 
@@ -377,7 +397,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(addOptions, _testDir);
 
@@ -393,7 +415,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(checkOptions, _testDir);
 
@@ -419,7 +443,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(addOptions, _testDir);
 
@@ -435,7 +461,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(updateOptions, _testDir);
 
@@ -462,7 +490,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(addOptions, _testDir);
 
@@ -510,7 +540,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(addOptions, _testDir);
 
@@ -525,7 +557,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: null,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(addCheckOptions, _testDir, capture);
@@ -554,7 +588,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(options, _testDir, capture);
@@ -586,7 +622,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(addOptions, _testDir);
 
@@ -601,7 +639,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(checkOptions, _testDir, capture);
@@ -628,7 +668,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(addOptions, _testDir);
 
@@ -648,7 +690,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(checkOptions, _testDir, capture);
@@ -675,7 +719,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(addOptions, _testDir);
 
@@ -700,7 +746,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(updateOptions, _testDir, capture);
@@ -732,7 +780,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(addOptions, _testDir);
 
@@ -753,7 +803,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: true);
+            Delete: true,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(deleteOptions, _testDir, capture);
@@ -787,7 +839,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: true);
+            Delete: true,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(deleteOptions, _testDir, capture);
@@ -815,7 +869,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: true,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(options, _testDir, capture);
@@ -845,7 +901,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(options, _testDir, capture);
@@ -871,7 +929,9 @@ public class BitCheckApplicationTests
             Timestamps: true,
             SingleDatabase: false,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         RunApp(options, _testDir);
 
@@ -902,7 +962,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: null,
-            Delete: true);
+            Delete: true,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(options, _testDir, capture);
@@ -928,7 +990,9 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: false);
+            Delete: false,
+            Info: false,
+            List: false);
 
         using var capture = new StringWriter();
         RunApp(options, _testDir, capture);
@@ -955,11 +1019,13 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: true);
+            Delete: true,
+            Info: false,
+            List: false);
 
         using var capture1 = new StringWriter();
         RunApp(deleteWithAdd, _testDir, capture1);
-        StringAssert.Contains(capture1.ToString(), "--delete cannot be combined with --add, --update, or --check",
+        StringAssert.Contains(capture1.ToString(), "--delete cannot be combined with other operations",
             "Should reject --delete with --add");
 
         // Test --delete with --update
@@ -973,11 +1039,13 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: true);
+            Delete: true,
+            Info: false,
+            List: false);
 
         using var capture2 = new StringWriter();
         RunApp(deleteWithUpdate, _testDir, capture2);
-        StringAssert.Contains(capture2.ToString(), "--delete cannot be combined with --add, --update, or --check",
+        StringAssert.Contains(capture2.ToString(), "--delete cannot be combined with other operations",
             "Should reject --delete with --update");
 
         // Test --delete with --check
@@ -991,12 +1059,297 @@ public class BitCheckApplicationTests
             Timestamps: false,
             SingleDatabase: false,
             File: filePath,
-            Delete: true);
+            Delete: true,
+            Info: false,
+            List: false);
 
         using var capture3 = new StringWriter();
         RunApp(deleteWithCheck, _testDir, capture3);
-        StringAssert.Contains(capture3.ToString(), "--delete cannot be combined with --add, --update, or --check",
+        StringAssert.Contains(capture3.ToString(), "--delete cannot be combined with other operations",
             "Should reject --delete with --check");
+    }
+
+    #endregion
+
+    #region Info and List Mode Tests
+
+    [TestMethod]
+    public void InfoMode_ShowsTrackedFileDetails()
+    {
+        var filePath = Path.Combine(_testDir, "infotest.txt");
+        File.WriteAllText(filePath, "info test content");
+
+        // First add the file
+        var addOptions = new AppOptions(
+            Recursive: false,
+            Add: true,
+            Update: false,
+            Check: false,
+            Verbose: false,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: false,
+            File: filePath,
+            Delete: false,
+            Info: false,
+            List: false);
+
+        RunApp(addOptions, _testDir);
+
+        // Then get info
+        var infoOptions = new AppOptions(
+            Recursive: false,
+            Add: false,
+            Update: false,
+            Check: false,
+            Verbose: false,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: false,
+            File: filePath,
+            Delete: false,
+            Info: true,
+            List: false);
+
+        using var capture = new StringWriter();
+        RunApp(infoOptions, _testDir, capture);
+        var output = capture.ToString();
+
+        StringAssert.Contains(output, "[TRACKED]", "Should show file is tracked");
+        StringAssert.Contains(output, "Hash:", "Should show hash");
+        StringAssert.Contains(output, "Hash Date:", "Should show hash date");
+        StringAssert.Contains(output, "Last Check:", "Should show last check date");
+        StringAssert.Contains(output, "Current File Status:", "Should show current file status");
+    }
+
+    [TestMethod]
+    public void InfoMode_ShowsNotTrackedForNewFile()
+    {
+        var filePath = Path.Combine(_testDir, "untracked.txt");
+        File.WriteAllText(filePath, "untracked content");
+
+        var infoOptions = new AppOptions(
+            Recursive: false,
+            Add: false,
+            Update: false,
+            Check: false,
+            Verbose: false,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: false,
+            File: filePath,
+            Delete: false,
+            Info: true,
+            List: false);
+
+        using var capture = new StringWriter();
+        RunApp(infoOptions, _testDir, capture);
+        var output = capture.ToString();
+
+        StringAssert.Contains(output, "[NOT TRACKED]", "Should show file is not tracked");
+    }
+
+    [TestMethod]
+    public void InfoMode_RequiresFileOption()
+    {
+        var options = new AppOptions(
+            Recursive: false,
+            Add: false,
+            Update: false,
+            Check: false,
+            Verbose: false,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: false,
+            File: null,
+            Delete: false,
+            Info: true,
+            List: false);
+
+        using var capture = new StringWriter();
+        RunApp(options, _testDir, capture);
+        var output = capture.ToString();
+
+        StringAssert.Contains(output, "Error:", "Should show error");
+        StringAssert.Contains(output, "--info can only be used with --file", "Should explain info requires file");
+    }
+
+    [TestMethod]
+    public void ListMode_ShowsTrackedFiles()
+    {
+        // Create and add files
+        var file1 = Path.Combine(_testDir, "list1.txt");
+        var file2 = Path.Combine(_testDir, "list2.txt");
+        File.WriteAllText(file1, "content1");
+        File.WriteAllText(file2, "content2");
+
+        var addOptions = new AppOptions(
+            Recursive: false,
+            Add: true,
+            Update: false,
+            Check: false,
+            Verbose: false,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: true,
+            File: null,
+            Delete: false,
+            Info: false,
+            List: false);
+
+        RunApp(addOptions, _testDir);
+
+        // List tracked files
+        var listOptions = new AppOptions(
+            Recursive: false,
+            Add: false,
+            Update: false,
+            Check: false,
+            Verbose: false,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: true,
+            File: null,
+            Delete: false,
+            Info: false,
+            List: true);
+
+        using var capture = new StringWriter();
+        RunApp(listOptions, _testDir, capture);
+        var output = capture.ToString();
+
+        StringAssert.Contains(output, "Mode: List", "Should show list mode");
+        StringAssert.Contains(output, "Total files tracked:", "Should show total count");
+        StringAssert.Contains(output, "list1.txt", "Should list first file");
+        StringAssert.Contains(output, "list2.txt", "Should list second file");
+    }
+
+    [TestMethod]
+    public void ListMode_ShowsMissingFiles()
+    {
+        var filePath = Path.Combine(_testDir, "willdelete.txt");
+        File.WriteAllText(filePath, "content");
+
+        var addOptions = new AppOptions(
+            Recursive: false,
+            Add: true,
+            Update: false,
+            Check: false,
+            Verbose: false,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: true,
+            File: null,
+            Delete: false,
+            Info: false,
+            List: false);
+
+        RunApp(addOptions, _testDir);
+
+        // Delete the actual file
+        File.Delete(filePath);
+
+        // List should show it as missing
+        var listOptions = new AppOptions(
+            Recursive: false,
+            Add: false,
+            Update: false,
+            Check: false,
+            Verbose: false,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: true,
+            File: null,
+            Delete: false,
+            Info: false,
+            List: true);
+
+        using var capture = new StringWriter();
+        RunApp(listOptions, _testDir, capture);
+        var output = capture.ToString();
+
+        StringAssert.Contains(output, "[MISSING]", "Should indicate file is missing");
+    }
+
+    [TestMethod]
+    public void ListMode_CannotBeUsedWithFile()
+    {
+        var filePath = Path.Combine(_testDir, "test.txt");
+        File.WriteAllText(filePath, "content");
+
+        var options = new AppOptions(
+            Recursive: false,
+            Add: false,
+            Update: false,
+            Check: false,
+            Verbose: false,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: false,
+            File: filePath,
+            Delete: false,
+            Info: false,
+            List: true);
+
+        using var capture = new StringWriter();
+        RunApp(options, _testDir, capture);
+        var output = capture.ToString();
+
+        StringAssert.Contains(output, "Error:", "Should show error");
+        StringAssert.Contains(output, "--list cannot be used with --file", "Should explain list cannot use file");
+    }
+
+    [TestMethod]
+    public void ListMode_CannotBeCombinedWithOtherOperations()
+    {
+        var options = new AppOptions(
+            Recursive: false,
+            Add: true,
+            Update: false,
+            Check: false,
+            Verbose: false,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: false,
+            File: null,
+            Delete: false,
+            Info: false,
+            List: true);
+
+        using var capture = new StringWriter();
+        RunApp(options, _testDir, capture);
+        var output = capture.ToString();
+
+        StringAssert.Contains(output, "Error:", "Should show error");
+        StringAssert.Contains(output, "--list cannot be combined with other operations", "Should explain list is standalone");
+    }
+
+    [TestMethod]
+    public void InfoMode_CannotBeCombinedWithOtherOperations()
+    {
+        var filePath = Path.Combine(_testDir, "test.txt");
+        File.WriteAllText(filePath, "content");
+
+        var options = new AppOptions(
+            Recursive: false,
+            Add: true,
+            Update: false,
+            Check: false,
+            Verbose: false,
+            Strict: false,
+            Timestamps: false,
+            SingleDatabase: false,
+            File: filePath,
+            Delete: false,
+            Info: true,
+            List: false);
+
+        using var capture = new StringWriter();
+        RunApp(options, _testDir, capture);
+        var output = capture.ToString();
+
+        StringAssert.Contains(output, "Error:", "Should show error");
+        StringAssert.Contains(output, "--info cannot be combined with other operations", "Should explain info is standalone");
     }
 
     #endregion

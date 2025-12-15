@@ -90,6 +90,8 @@ This makes BitCheck practical for real-world use where files are frequently edit
 - `--single-db` - Single database mode: use one database file in root directory with relative paths
 - `-f, --file <path>` - Process a single file instead of scanning directories
 - `-d, --delete` - Delete a file record from the database (only valid with `--file`)
+- `-i, --info` - Show database information for a single file (only valid with `--file`)
+- `-l, --list` - List all files tracked in the database
 - `--help` - Show help information
 
 ## Usage Examples
@@ -356,9 +358,61 @@ Time elapsed: 00:00:00
 
 **Notes:**
 - The `--delete` option only removes the record from the database; it does not delete the actual file
-- `--delete` cannot be combined with `--add`, `--update`, or `--check`
+- `--delete`, `--info`, and `--list` cannot be combined with other operations
 - `--recursive` cannot be used with `--file` (single file mode processes only one file)
 - Works with both per-directory databases and `--single-db` mode
+
+### Query Database Status
+
+You can query the database without performing any operations:
+
+```bash
+# Show info for a specific file
+bitcheck --file document.pdf --info
+
+# List all tracked files in current directory
+bitcheck --list
+
+# List all tracked files recursively
+bitcheck --list --recursive
+
+# List files in single-db mode
+bitcheck --list --single-db
+```
+
+**Output (--info for tracked file):**
+```
+BitCheck - Data Integrity Monitor
+Mode: Info
+Single File: document.pdf
+
+[TRACKED] document.pdf
+  Hash:          A1B2C3D4E5F6G7H8
+  Hash Date:     2025-12-15 10:30:00 UTC
+  Last Check:    2025-12-15 14:00:00 UTC
+  Last Modified: 2025-12-15 10:25:00 UTC
+  Created Date:  2025-12-01 09:00:00 UTC
+
+  Current File Status:
+    Size:        1.23 MB
+    Modified:    2025-12-15 10:25:00 UTC
+    Created:     2025-12-01 09:00:00 UTC
+    Timestamps:  Match database
+```
+
+**Output (--list):**
+```
+BitCheck - Data Integrity Monitor
+Mode: List
+Single Database: True
+
+Database: C:\Data\.bitcheck.db
+Total files tracked: 3
+
+  document.pdf
+  photo.jpg
+  report.xlsx
+```
 
 ### Single Database Mode (One Database for All Files)
 
@@ -556,7 +610,7 @@ A: Normal mode creates a `.bitcheck.db` file in each directory and stores only f
 - **Database**: JSON with in-memory Dictionary cache
 - **Concurrency**: Thread-safe with lock-based synchronization
 - **Platform**: Cross-platform (.NET 10.0)
-- **Testing**: 90 unit tests with MSTest framework
+- **Testing**: 98 unit tests with MSTest framework
 
 ### Build from Source
 
@@ -579,7 +633,7 @@ dotnet publish src/BitCheck/BitCheck.csproj -c Release -r win-x64 --self-contain
 
 ### Test Coverage
 
-The project includes 90 comprehensive unit tests covering:
+The project includes 98 comprehensive unit tests covering:
 - Application logic and integration scenarios
 - Database operations (CRUD, persistence, caching)
 - File system utilities and access validation
@@ -588,6 +642,7 @@ The project includes 90 comprehensive unit tests covering:
 - File access and error handling (locked files, permissions, I/O errors)
 - Missing file detection and removal
 - Single file mode operations
+- Info and list query modes
 - Data models and validation
 
 ### Performance Characteristics

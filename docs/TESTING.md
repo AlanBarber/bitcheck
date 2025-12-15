@@ -53,7 +53,7 @@ dotnet test src/BitCheck.sln --filter "FullyQualifiedName~DatabaseService_Insert
 
 ## Test Coverage
 
-### BitCheck Application Tests (21 tests)
+### BitCheck Application Tests (29 tests)
 - **Application Logic**
   - Recursive vs non-recursive directory processing
   - Add/update/check operations
@@ -77,6 +77,15 @@ dotnet test src/BitCheck.sln --filter "FullyQualifiedName~DatabaseService_Insert
   - Delete without file validation
   - Delete with other operations validation
   - Recursive with file validation
+- **Info and List Modes**
+  - Info mode shows tracked file details
+  - Info mode shows not tracked for new files
+  - Info mode requires file option
+  - Info mode cannot be combined with other operations
+  - List mode shows tracked files
+  - List mode shows missing files
+  - List mode cannot be used with file
+  - List mode cannot be combined with other operations
 
 ### DatabaseService Tests (15 tests)
 - **CRUD Operations**

@@ -121,6 +121,12 @@ BitCheck --file myfile.txt --add
 BitCheck --file myfile.txt --check
 BitCheck --file myfile.txt --update
 BitCheck --file myfile.txt --delete   # Remove from database only
+BitCheck --file myfile.txt --info     # Show file status
+
+# List tracked files
+BitCheck --list                       # Current directory
+BitCheck --list --recursive           # All directories
+BitCheck --list --single-db           # Single database mode
 ```
 
 ## What Gets Created
@@ -218,6 +224,8 @@ BitCheck --add --recursive
 7. **Be consistent** - If you start with `--single-db`, always use it for that directory
 8. **Use `--file` for targeted operations** - Process specific files without scanning directories
 9. **Use `--delete` to clean up** - Remove obsolete entries from database without deleting actual files
+10. **Use `--info` to check status** - See if a file is tracked and its database details
+11. **Use `--list` to audit** - See all files currently tracked in the database
 
 ## Help
 

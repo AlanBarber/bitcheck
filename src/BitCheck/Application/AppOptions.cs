@@ -10,5 +10,7 @@ namespace BitCheck.Application
         bool Timestamps,
         bool SingleDatabase,
         string? File,
-        bool Delete);
+        bool Delete,
+        bool Info,
+        bool List);
 }
