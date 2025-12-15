@@ -115,6 +115,12 @@ BitCheck --check --verbose
 # Use single database for entire tree (easier management)
 BitCheck --add --recursive --single-db
 BitCheck --check --recursive --single-db
+
+# Process a single file
+BitCheck --file myfile.txt --add
+BitCheck --file myfile.txt --check
+BitCheck --file myfile.txt --update
+BitCheck --file myfile.txt --delete   # Remove from database only
 ```
 
 ## What Gets Created
@@ -172,7 +178,7 @@ crontab -e
 
 ### "Error: At least one operation must be specified"
 
-You need to use at least one of: `--add`, `--check`, or `--update`
+You need to use at least one of: `--add`, `--check`, `--update`, or `--delete` (with `--file`)
 
 ```bash
 # Wrong
@@ -180,6 +186,9 @@ BitCheck --recursive
 
 # Right
 BitCheck --check --recursive
+
+# For single file delete
+BitCheck --file myfile.txt --delete
 ```
 
 ### "Could not compute hash"
@@ -207,6 +216,8 @@ BitCheck --add --recursive
 5. **Use verbose sparingly** - Only for debugging
 6. **Use `--single-db` for archives** - Easier to manage one database for backup sets or portable collections
 7. **Be consistent** - If you start with `--single-db`, always use it for that directory
+8. **Use `--file` for targeted operations** - Process specific files without scanning directories
+9. **Use `--delete` to clean up** - Remove obsolete entries from database without deleting actual files
 
 ## Help
 

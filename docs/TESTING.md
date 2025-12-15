@@ -53,7 +53,7 @@ dotnet test src/BitCheck.sln --filter "FullyQualifiedName~DatabaseService_Insert
 
 ## Test Coverage
 
-### BitCheck Application Tests (9 tests)
+### BitCheck Application Tests (21 tests)
 - **Application Logic**
   - Recursive vs non-recursive directory processing
   - Add/update/check operations
@@ -64,6 +64,19 @@ dotnet test src/BitCheck.sln --filter "FullyQualifiedName~DatabaseService_Insert
   - Missing files with update remove entries
 - **Timestamp Operations**
   - Creation time refresh with timestamps flag
+- **Single File Mode**
+  - Add single file to database
+  - Check single file for corruption
+  - Detect mismatch in single file
+  - Update single file hash
+  - Delete file record from database
+  - Delete non-existent file handling
+  - Single file with single-db mode
+  - File not found error handling
+  - Timestamps tracking in single file mode
+  - Delete without file validation
+  - Delete with other operations validation
+  - Recursive with file validation
 
 ### DatabaseService Tests (15 tests)
 - **CRUD Operations**

@@ -13,6 +13,10 @@
 | Strict verification | `bitcheck -c -s` | Report all changes as corruption |
 | Timestamp verification | `bitcheck -c -t` | Check hash AND timestamps |
 | Single database | `bitcheck -a -r --single-db` | Use one database for entire tree |
+| Single file add | `bitcheck -f file.txt -a` | Add specific file to database |
+| Single file check | `bitcheck -f file.txt -c` | Check specific file for corruption |
+| Single file update | `bitcheck -f file.txt -u` | Update specific file hash |
+| Remove from database | `bitcheck -f file.txt -d` | Delete file record from database |
 
 ## Detailed Scenarios
 
@@ -300,7 +304,63 @@ WARNING: 1 file(s) failed integrity check!
 
 **Why timestamp mode?** Detects file system operations that preserve content but change metadata.
 
-### Scenario 13: Portable Archive (Single Database Mode)
+### Scenario 13: Single File Operations
+
+You want to process a specific file without scanning the entire directory.
+
+```bash
+# Add a single file to the database
+bitcheck --file important.pdf --add
+
+# Check a single file
+bitcheck --file important.pdf --check
+
+# Update a single file's hash after editing
+bitcheck --file important.pdf --update
+
+# Remove a file from the database (file itself is not deleted)
+bitcheck --file important.pdf --delete
+```
+
+**Output (add single file):**
+```
+BitCheck - Data Integrity Monitor
+Mode: Add
+Single File: important.pdf
+
+[ADD] important.pdf
+
+=== Summary ===
+Files processed: 1
+Files added: 1
+Files skipped: 0
+Total bytes read: 2.34 MB
+Time elapsed: 00:00:00
+```
+
+**Output (delete from database):**
+```
+BitCheck - Data Integrity Monitor
+Mode: Delete
+Single File: important.pdf
+
+[DELETED] important.pdf - Removed from database
+
+=== Summary ===
+Files processed: 0
+Files removed from database: 1
+Files skipped: 0
+Total bytes read: 0 B
+Time elapsed: 00:00:00
+```
+
+**Use cases:**
+- Quick verification of specific files
+- Adding individual files to existing database
+- Removing obsolete entries without full directory scan
+- Scripting file-specific workflows
+
+### Scenario 14: Portable Archive (Single Database Mode)
 
 You have a collection of files that you want to track as a single unit for easy portability.
 
@@ -357,17 +417,34 @@ Time elapsed: 00:00:12
 | `-a -r --single-db` | Add to single database |
 | `-c -r --single-db` | Check using single database |
 | `-a -c -u -r --single-db` | Full maintenance with single database |
+| `-f file.txt -a` | Add single file |
+| `-f file.txt -c` | Check single file |
+| `-f file.txt -u` | Update single file |
+| `-f file.txt -d` | Delete single file from database |
+| `-f file.txt -c --single-db` | Check single file using single database |
 
 ### Invalid Usage
 
 ```bash
 # ERROR: No operation specified
 bitcheck --recursive
-# Must include at least one of: --add, --check, --update
+# Must include at least one of: --add, --check, --update, or --delete (with --file)
 
 # ERROR: No operation specified
 bitcheck --verbose
-# Must include at least one of: --add, --check, --update
+# Must include at least one of: --add, --check, --update, or --delete (with --file)
+
+# ERROR: --delete requires --file
+bitcheck --delete
+# Must specify a file with --file when using --delete
+
+# ERROR: --delete cannot be combined with other operations
+bitcheck --file test.txt --delete --add
+# --delete must be used alone, not with --add, --check, or --update
+
+# ERROR: --recursive cannot be used with --file
+bitcheck --file test.txt --check --recursive
+# Single file mode processes only one file, not directories
 ```
 
 ## Understanding Output Tags
@@ -378,6 +455,8 @@ bitcheck --verbose
 - `[UPDATE]` - File hash updated in database
 - `[UPDATED]` - File hash updated after mismatch (with --check --update)
 - `[SKIP]` - File skipped (various reasons, shown in verbose)
+- `[DELETED]` - File record removed from database (with --file --delete)
+- `[NOT FOUND]` - File not in database (when trying to delete)
 - `[ERROR]` - Error processing file
 
 ## Performance Tips
@@ -445,6 +524,8 @@ bitcheck --add --recursive
 8. **Use strict mode for backups**: `--check --recursive --strict` for archives that shouldn't change
 9. **Use timestamp mode for security**: `--check --recursive --timestamps` to detect file system manipulation
 10. **Use single database for portability**: `--single-db` when you need to move directory trees
+11. **Use single file mode for targeted operations**: `--file` when you only need to process specific files
+12. **Use delete to clean up**: `--file --delete` to remove obsolete entries without deleting actual files
 
 ## Integration Examples
 

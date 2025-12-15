@@ -37,7 +37,14 @@ namespace BitCheck.Application
                 }
                 WriteHeader();
 
-                ProcessDatabases(".");
+                if (!string.IsNullOrEmpty(_options.File))
+                {
+                    ProcessSingleFile(_options.File);
+                }
+                else
+                {
+                    ProcessFullDirectory(".");
+                }
 
                 WriteSummary(DateTime.UtcNow - startTime);
             }
@@ -74,12 +81,42 @@ namespace BitCheck.Application
         /// <returns>True if at least one operation is specified, false otherwise.</returns>
         private bool ValidateOperations()
         {
+            // --delete is only valid with --file
+            if (_options.Delete && string.IsNullOrEmpty(_options.File))
+            {
+                Console.WriteLine("Error: --delete can only be used with --file.");
+                Console.WriteLine("Use --help for usage information.");
+                return false;
+            }
+
+            // --delete cannot be combined with other operations
+            if (_options.Delete && (_options.Add || _options.Update || _options.Check))
+            {
+                Console.WriteLine("Error: --delete cannot be combined with --add, --update, or --check.");
+                Console.WriteLine("Use --help for usage information.");
+                return false;
+            }
+
+            // --recursive is not valid with --file
+            if (!string.IsNullOrEmpty(_options.File) && _options.Recursive)
+            {
+                Console.WriteLine("Error: --recursive cannot be used with --file.");
+                Console.WriteLine("Use --help for usage information.");
+                return false;
+            }
+
+            // In delete mode, no other operation is needed
+            if (_options.Delete)
+            {
+                return true;
+            }
+
             if (_options.Add || _options.Update || _options.Check)
             {
                 return true;
             }
 
-            Console.WriteLine("Error: At least one operation (--add, --update, or --check) must be specified.");
+            Console.WriteLine("Error: At least one operation (--add, --update, --check, or --delete with --file) must be specified.");
             Console.WriteLine("Use --help for usage information.");
             return false;
         }
@@ -91,7 +128,14 @@ namespace BitCheck.Application
         {
             Console.WriteLine("BitCheck - Data Integrity Monitor");
             Console.WriteLine($"Mode: {BuildModeDescription()}");
-            Console.WriteLine($"Recursive: {_options.Recursive}");
+            if (!string.IsNullOrEmpty(_options.File))
+            {
+                Console.WriteLine($"Single File: {_options.File}");
+            }
+            else
+            {
+                Console.WriteLine($"Recursive: {_options.Recursive}");
+            }
             if (_options.SingleDatabase)
             {
                 Console.WriteLine("Single Database: True");
@@ -106,10 +150,11 @@ namespace BitCheck.Application
         /// <returns>A string representing the mode description.</returns>
         private string BuildModeDescription()
         {
-            var modes = new List<string>(3);
+            var modes = new List<string>(4);
             if (_options.Add) modes.Add("Add");
             if (_options.Update) modes.Add("Update");
             if (_options.Check) modes.Add("Check");
+            if (_options.Delete) modes.Add("Delete");
             return modes.Count == 0 ? "None" : string.Join(' ', modes);
         }
 
@@ -167,10 +212,86 @@ namespace BitCheck.Application
         }
 
         /// <summary>
+        /// Processes a single file specified by the --file option.
+        /// </summary>
+        /// <param name="filePath">The path to the file to process.</param>
+        private void ProcessSingleFile(string filePath)
+        {
+            var fullFilePath = Path.GetFullPath(filePath);
+            var directory = Path.GetDirectoryName(fullFilePath);
+            var fileName = Path.GetFileName(fullFilePath);
+
+            if (directory == null)
+            {
+                Console.WriteLine($"Error: Invalid file path: {filePath}");
+                return;
+            }
+
+            // Determine database path based on single-db mode
+            string dbPath;
+            string databaseKey;
+
+            if (_options.SingleDatabase)
+            {
+                // In single-db mode, use the database in the current directory with relative path as key
+                var rootPath = Path.GetFullPath(".");
+                dbPath = Path.Combine(rootPath, BitCheckConstants.DatabaseFileName);
+                databaseKey = Path.GetRelativePath(rootPath, fullFilePath);
+            }
+            else
+            {
+                // In per-directory mode, use the database in the file's directory with filename as key
+                dbPath = Path.Combine(directory, BitCheckConstants.DatabaseFileName);
+                databaseKey = fileName;
+            }
+
+            using var db = new DatabaseService(dbPath);
+
+            // Handle delete mode
+            if (_options.Delete)
+            {
+                DeleteFileFromDatabase(db, databaseKey, fileName);
+                db.Flush();
+                return;
+            }
+
+            // Check if file exists for non-delete operations
+            if (!File.Exists(fullFilePath))
+            {
+                Console.WriteLine($"Error: File not found: {fullFilePath}");
+                return;
+            }
+
+            // Process the file with standard operations
+            ProcessFile(db, fullFilePath, databaseKey, fileName);
+            db.Flush();
+        }
+
+        /// <summary>
+        /// Deletes a file entry from the database.
+        /// </summary>
+        /// <param name="db">The database service to use.</param>
+        /// <param name="databaseKey">The database key for the file.</param>
+        /// <param name="displayName">The display name for the file.</param>
+        private void DeleteFileFromDatabase(IDatabaseService db, string databaseKey, string displayName)
+        {
+            var existingEntry = db.GetFileEntry(databaseKey);
+            if (existingEntry == null)
+            {
+                Console.WriteLine($"[NOT FOUND] {displayName} - Not in database");
+                return;
+            }
+
+            db.DeleteFileEntry(databaseKey);
+            Console.WriteLine($"[DELETED] {displayName} - Removed from database");
+            _stats.FilesRemoved++;
+        }
+
+        /// <summary>
         /// Processes directories using either a single shared database or per-directory databases.
         /// </summary>
         /// <param name="rootPath">The root path to begin processing.</param>
-        private void ProcessDatabases(string rootPath)
+        private void ProcessFullDirectory(string rootPath)
         {
             var fullRootPath = Path.GetFullPath(rootPath);
 

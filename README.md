@@ -15,7 +15,7 @@ BitCheck is a fast, cross-platform CLI tool that detects file corruption by trac
 
 - 🛡️ **Detect corruption early** - Find bitrot before it's too late
 - ⚡ **Lightning fast** - Uses the extremely fast XxHash64 to validate files
-- 🎯 **Simple to use** - Just three commands: add, check, update
+- 🎯 **Simple to use** - Just a few commands: add, check, update, delete
 - 🧠 **Smart checking** - Automatically distinguishes intentional edits from corruption
 - 🔒 **Safe & reliable** - Gracefully handles locked files and permission issues
 - 📁 **Per-directory tracking** - Each folder maintains its own database
@@ -88,6 +88,8 @@ This makes BitCheck practical for real-world use where files are frequently edit
 - `-s, --strict` - Strict mode: report all hash mismatches as corruption, prevents auto-update if creation date changed
 - `-t, --timestamps` - Timestamp mode: flag file as changed if hash, created date, or modified date do not match
 - `--single-db` - Single database mode: use one database file in root directory with relative paths
+- `-f, --file <path>` - Process a single file instead of scanning directories
+- `-d, --delete` - Delete a file record from the database (only valid with `--file`)
 - `--help` - Show help information
 
 ## Usage Examples
@@ -296,6 +298,68 @@ WARNING: 1 file(s) failed integrity check!
 
 **Note:** Creation dates are always tracked in the database, but only verified when `--timestamps` flag is used.
 
+### Single File Mode (Process Individual Files)
+
+Instead of scanning entire directories, you can process a single file using the `--file` option:
+
+```bash
+# Add a single file to the database
+bitcheck --file document.pdf --add
+
+# Check a single file
+bitcheck --file document.pdf --check
+
+# Update a single file's hash
+bitcheck --file document.pdf --update
+
+# Delete a file record from the database
+bitcheck --file document.pdf --delete
+```
+
+**Output (add single file):**
+```
+BitCheck - Data Integrity Monitor
+Mode: Add
+Single File: document.pdf
+
+[ADD] document.pdf
+
+=== Summary ===
+Files processed: 1
+Files added: 1
+Files skipped: 0
+Total bytes read: 1.23 MB
+Time elapsed: 00:00:00
+```
+
+**Output (delete from database):**
+```
+BitCheck - Data Integrity Monitor
+Mode: Delete
+Single File: document.pdf
+
+[DELETED] document.pdf - Removed from database
+
+=== Summary ===
+Files processed: 0
+Files removed from database: 1
+Files skipped: 0
+Total bytes read: 0 B
+Time elapsed: 00:00:00
+```
+
+**Benefits of Single File Mode:**
+- ✅ **Targeted operations** - Process specific files without scanning directories
+- ✅ **Faster execution** - No directory enumeration overhead
+- ✅ **Scripting friendly** - Easy to integrate into file-specific workflows
+- ✅ **Database cleanup** - Remove obsolete entries with `--delete`
+
+**Notes:**
+- The `--delete` option only removes the record from the database; it does not delete the actual file
+- `--delete` cannot be combined with `--add`, `--update`, or `--check`
+- `--recursive` cannot be used with `--file` (single file mode processes only one file)
+- Works with both per-directory databases and `--single-db` mode
+
 ### Single Database Mode (One Database for All Files)
 
 By default, BitCheck creates a separate `.bitcheck.db` file in each directory. With `--single-db` mode, you can use a single database file in the root directory that tracks all files using relative paths.
@@ -470,6 +534,12 @@ A: Minimal. In benchmarks XXHash64 is 4x faster than Blake3, 7x faster than SHA2
 **Q: What happens to deleted files?**  
 A: During `--check`, deleted files are reported as `[MISSING]`. Use `--update` to remove them from the database.
 
+**Q: How do I process a single file instead of a whole directory?**  
+A: Use the `--file` option: `bitcheck --file myfile.txt --check`. This processes only the specified file without scanning the directory.
+
+**Q: How do I remove a file from the database without deleting it?**  
+A: Use `--file` with `--delete`: `bitcheck --file myfile.txt --delete`. This removes the database entry but leaves the actual file untouched.
+
 **Q: When should I use single database mode (`--single-db`)?**  
 A: Use `--single-db` when you want one centralized database for an entire directory tree instead of separate databases in each folder. This is ideal for portable archives, backup sets, or projects where you want all file tracking in one place. The database stores relative paths, making it easy to move the entire directory structure.
 
@@ -486,7 +556,7 @@ A: Normal mode creates a `.bitcheck.db` file in each directory and stores only f
 - **Database**: JSON with in-memory Dictionary cache
 - **Concurrency**: Thread-safe with lock-based synchronization
 - **Platform**: Cross-platform (.NET 10.0)
-- **Testing**: 76 unit tests with MSTest framework
+- **Testing**: 90 unit tests with MSTest framework
 
 ### Build from Source
 
@@ -509,7 +579,7 @@ dotnet publish src/BitCheck/BitCheck.csproj -c Release -r win-x64 --self-contain
 
 ### Test Coverage
 
-The project includes 76 comprehensive unit tests covering:
+The project includes 90 comprehensive unit tests covering:
 - Application logic and integration scenarios
 - Database operations (CRUD, persistence, caching)
 - File system utilities and access validation
@@ -517,6 +587,7 @@ The project includes 76 comprehensive unit tests covering:
 - Hidden file and directory filtering (cross-platform)
 - File access and error handling (locked files, permissions, I/O errors)
 - Missing file detection and removal
+- Single file mode operations
 - Data models and validation
 
 ### Performance Characteristics

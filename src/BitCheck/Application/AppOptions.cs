@@ -8,5 +8,7 @@ namespace BitCheck.Application
         bool Verbose,
         bool Strict,
         bool Timestamps,
-        bool SingleDatabase);
+        bool SingleDatabase,
+        string? File,
+        bool Delete);
 }
