@@ -874,8 +874,27 @@ public class BitCheckApplicationTests
             Info: false,
             List: false);
 
+        // Capture current directory before and after SetCurrentDirectory
+        var cwdBefore = Directory.GetCurrentDirectory();
+        Directory.SetCurrentDirectory(_testDir);
+        var cwdAfterSet = Directory.GetCurrentDirectory();
+        var getFullPathDot = Path.GetFullPath(".");
+
         using var capture = new StringWriter();
-        RunApp(options, _testDir, capture);
+        try
+        {
+            Console.SetOut(capture);
+            Console.SetError(capture);
+            var app = new BitCheckApplication(options);
+            app.Run();
+        }
+        finally
+        {
+            capture.Flush();
+            Console.SetOut(Console.Out);
+            Console.SetError(Console.Error);
+            Directory.SetCurrentDirectory(cwdBefore);
+        }
         var output = capture.ToString();
 
         StringAssert.Contains(output, "[ADD]", "File should be added");
@@ -883,16 +902,17 @@ public class BitCheckApplicationTests
         var dbPath = Path.Combine(_testDir, BitCheckConstants.DatabaseFileName);
         using var db = new DatabaseService(dbPath);
 
-        // Use the same path resolution the application uses to ensure consistency
         var rootPath = Path.GetFullPath(_testDir);
         var fullFilePath = Path.GetFullPath(filePath);
         var expectedKey = Path.GetRelativePath(rootPath, fullFilePath);
 
-        // Diagnostic output for debugging macOS path resolution issues
         var allEntries = db.GetAllEntries().ToList();
         var diagnosticInfo = new StringBuilder();
         diagnosticInfo.AppendLine("=== DIAGNOSTIC INFO ===");
         diagnosticInfo.AppendLine($"OS: {Environment.OSVersion}");
+        diagnosticInfo.AppendLine($"cwdBefore: {cwdBefore}");
+        diagnosticInfo.AppendLine($"cwdAfterSet: {cwdAfterSet}");
+        diagnosticInfo.AppendLine($"Path.GetFullPath(\".\"): {getFullPathDot}");
         diagnosticInfo.AppendLine($"_testDir (raw): {_testDir}");
         diagnosticInfo.AppendLine($"_testDir (GetFullPath): {rootPath}");
         diagnosticInfo.AppendLine($"filePath (raw): {filePath}");
