@@ -258,7 +258,8 @@ namespace BitCheck.Application
         /// <param name="filePath">The path to the file to process.</param>
         private void ProcessSingleFile(string filePath)
         {
-            var fullFilePath = Path.GetFullPath(filePath);
+            // Resolve the file path - on macOS this resolves symlinks like /var -> /private/var
+            var fullFilePath = new FileInfo(filePath).FullName;
             var directory = Path.GetDirectoryName(fullFilePath);
             var fileName = Path.GetFileName(fullFilePath);
 
@@ -275,7 +276,8 @@ namespace BitCheck.Application
             if (_options.SingleDatabase)
             {
                 // In single-db mode, use the database in the current directory with relative path as key
-                var rootPath = Directory.GetCurrentDirectory();
+                // Use DirectoryInfo.FullName to resolve symlinks consistently with FileInfo above
+                var rootPath = new DirectoryInfo(Directory.GetCurrentDirectory()).FullName;
                 dbPath = Path.Combine(rootPath, BitCheckConstants.DatabaseFileName);
                 databaseKey = Path.GetRelativePath(rootPath, fullFilePath);
             }
