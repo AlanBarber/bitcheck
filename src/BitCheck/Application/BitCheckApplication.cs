@@ -275,7 +275,7 @@ namespace BitCheck.Application
             if (_options.SingleDatabase)
             {
                 // In single-db mode, use the database in the current directory with relative path as key
-                var rootPath = Path.GetFullPath(".");
+                var rootPath = Directory.GetCurrentDirectory();
                 dbPath = Path.Combine(rootPath, BitCheckConstants.DatabaseFileName);
                 databaseKey = Path.GetRelativePath(rootPath, fullFilePath);
             }
