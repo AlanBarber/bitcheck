@@ -306,12 +306,12 @@ namespace BitCheck.Tests.ApplicationTests
             using var db = new DatabaseService(dbPath);
 
             var allEntries = db.GetAllEntries().ToList();
-            Assert.AreEqual(1, allEntries.Count, "Should have exactly one entry");
+            Assert.HasCount(1, allEntries, "Should have exactly one entry");
 
             var storedKey = allEntries[0].FileName;
-            Assert.IsFalse(storedKey.StartsWith("/"), $"Key should be relative, not absolute: {storedKey}");
-            Assert.IsFalse(storedKey.Contains("../"), $"Key should not contain parent traversal: {storedKey}");
-            Assert.IsTrue(storedKey.Contains("nested.txt"), $"Key should contain filename: {storedKey}");
+            Assert.DoesNotStartWith(storedKey, "/", $"Key should be relative, not absolute: {storedKey}");
+            Assert.DoesNotContain(storedKey, "../", $"Key should not contain parent traversal: {storedKey}");
+            Assert.Contains("nested.txt", storedKey, $"Key should contain filename: {storedKey}");
         }
 
         [TestMethod]

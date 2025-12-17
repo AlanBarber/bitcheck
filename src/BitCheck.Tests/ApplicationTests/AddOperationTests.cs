@@ -120,7 +120,7 @@ namespace BitCheck.Tests.ApplicationTests
             var output = capture.ToString();
 
             StringAssert.Contains(output, "[OK]", "Existing file should be checked when --check is specified");
-            Assert.IsFalse(output.Contains("Already in database"), "File should not be skipped when --check is active");
+            Assert.DoesNotContain("Already in database", output, "File should not be skipped when --check is active");
         }
     }
 }

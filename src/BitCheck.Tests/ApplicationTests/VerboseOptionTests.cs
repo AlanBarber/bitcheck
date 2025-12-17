@@ -28,7 +28,7 @@ namespace BitCheck.Tests.ApplicationTests
             using var verboseCapture = new StringWriter();
             RunApp(verboseOptions, _testDir, verboseCapture);
 
-            StringAssert.Contains(verboseCapture.ToString(), "Processing:", "Verbose mode should print processing messages");
+            Assert.Contains("Processing:", verboseCapture.ToString(), "Verbose mode should print processing messages");
         }
 
         [TestMethod]
@@ -54,7 +54,7 @@ namespace BitCheck.Tests.ApplicationTests
             using var capture = new StringWriter();
             RunApp(quietOptions, _testDir, capture);
 
-            Assert.IsFalse(capture.ToString().Contains("Processing:"), "Non-verbose mode should not print processing messages");
+            Assert.DoesNotContain("Processing:", capture.ToString(), "Non-verbose mode should not print processing messages");
         }
     }
 }
