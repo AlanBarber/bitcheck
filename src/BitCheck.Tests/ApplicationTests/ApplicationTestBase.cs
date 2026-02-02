@@ -57,5 +57,33 @@ namespace BitCheck.Tests.ApplicationTests
                 Directory.SetCurrentDirectory(previous);
             }
         }
+
+        protected static int RunAppWithExitCode(AppOptions options, string workingDirectory, StringWriter? consoleCapture = null)
+        {
+            var previous = Directory.GetCurrentDirectory();
+            var previousOut = Console.Out;
+            var previousErr = Console.Error;
+            Directory.SetCurrentDirectory(workingDirectory);
+            if (consoleCapture != null)
+            {
+                Console.SetOut(consoleCapture);
+                Console.SetError(consoleCapture);
+            }
+            try
+            {
+                var app = new BitCheckApplication(options);
+                return app.Run();
+            }
+            finally
+            {
+                if (consoleCapture != null)
+                {
+                    consoleCapture.Flush();
+                    Console.SetOut(previousOut);
+                    Console.SetError(previousErr);
+                }
+                Directory.SetCurrentDirectory(previous);
+            }
+        }
     }
 }

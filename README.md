@@ -533,6 +533,10 @@ This helps you identify deleted files and keep your database clean.
 
 ## Automation Examples
 
+BitCheck returns standard exit codes for easy integration with scripts and automation:
+- **Exit code 0**: Success (no errors or all issues resolved)
+- **Exit code 1**: Errors (validation failures, corruption detected, missing files, exceptions)
+
 ### Windows Task Scheduler
 ```powershell
 # Check all files weekly

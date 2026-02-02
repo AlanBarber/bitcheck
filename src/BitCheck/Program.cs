@@ -97,7 +97,7 @@ namespace BitCheck
 
  GitHub: https://github.com/alanbarber/bitcheck";
 
-            rootCommand.SetHandler(HandleCommand);
+            rootCommand.SetHandler((context) => HandleCommand(context));
 
             return rootCommand;
         }
@@ -106,7 +106,8 @@ namespace BitCheck
         /// Handles the root command invocation.
         /// </summary>
         /// <param name="context">The invocation context containing parsed options.</param>
-        private static void HandleCommand(InvocationContext context)
+        /// <returns>Exit code: 0 for success, non-zero for errors.</returns>
+        private static int HandleCommand(InvocationContext context)
         {
             var options = new AppOptions(
                 context.ParseResult.GetValueForOption(_recursiveOption),
@@ -122,7 +123,7 @@ namespace BitCheck
                 context.ParseResult.GetValueForOption(_infoOption),
                 context.ParseResult.GetValueForOption(_listOption));
 
-            new BitCheckApplication(options).Run();
+            return new BitCheckApplication(options).Run();
         }
     }
 }

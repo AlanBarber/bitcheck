@@ -25,7 +25,8 @@ namespace BitCheck.Application
         /// <summary>
         /// Runs the BitCheck application.
         /// </summary>
-        public void Run()
+        /// <returns>Exit code: 0 for success, non-zero for errors.</returns>
+        public int Run()
         {
             Console.CancelKeyPress += OnCancelKeyPress;
             var startTime = DateTime.UtcNow;
@@ -33,7 +34,7 @@ namespace BitCheck.Application
             {
                 if (!ValidateOperations())
                 {
-                    return;
+                    return 1;
                 }
                 WriteHeader();
 
@@ -41,7 +42,7 @@ namespace BitCheck.Application
                 if (_options.List)
                 {
                     ListTrackedFiles();
-                    return;
+                    return 0;
                 }
 
                 if (!string.IsNullOrEmpty(_options.File))
@@ -54,15 +55,29 @@ namespace BitCheck.Application
                 }
 
                 WriteSummary(DateTime.UtcNow - startTime);
+                
+                // Return non-zero if there were unresolved mismatches or missing files
+                // If update mode is on and mismatches were fixed, that's success
+                bool hasUnresolvedMismatches = _stats.FilesMismatched > 0 && !_options.Update;
+                bool hasUnresolvedMissingFiles = _stats.FilesMissing > 0 && _stats.FilesRemoved == 0;
+                
+                if (hasUnresolvedMismatches || hasUnresolvedMissingFiles)
+                {
+                    return 1;
+                }
+                
+                return 0;
             }
             catch (OperationCanceledException)
             {
                 // Expected when user cancels - show summary with partial results
                 WriteSummary(DateTime.UtcNow - startTime);
+                return 1;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
+                return 1;
             }
             finally
             {

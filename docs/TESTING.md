@@ -8,7 +8,18 @@ The test project is located at `src/BitCheck.Tests/` and uses MSTest as the test
 
 ### Test Files
 
-- **`BitCheckApplicationTests.cs`** - Integration tests for main application logic
+- **`ApplicationTests/`** - Application-level integration tests
+  - **`AddOperationTests.cs`** - Tests for add operation functionality
+  - **`ApplicationTestBase.cs`** - Base class providing test helpers and setup
+  - **`CheckOperationTests.cs`** - Tests for check operation functionality
+  - **`DeleteOperationTests.cs`** - Tests for delete operation functionality
+  - **`ExitCodeTests.cs`** - Tests for exit code behavior (success/error scenarios)
+  - **`InfoModeTests.cs`** - Tests for info mode functionality
+  - **`ListModeTests.cs`** - Tests for list mode functionality
+  - **`RecursiveAndDatabaseModeTests.cs`** - Tests for recursive and database mode options
+  - **`SingleFileModeTests.cs`** - Tests for single file mode operations
+  - **`UpdateOperationTests.cs`** - Tests for update operation functionality
+  - **`VerboseOptionTests.cs`** - Tests for verbose output option
 - **`DatabaseServiceTests.cs`** - Tests for database operations (CRUD, persistence, caching)
 - **`FileAccessTests.cs`** - Tests for file access validation and error handling
 - **`FileEntryTests.cs`** - Tests for the `FileEntry` data model
@@ -46,6 +57,11 @@ Run specific test class:
 dotnet test src/BitCheck.sln --filter "FullyQualifiedName~DatabaseServiceTests"
 ```
 
+Run exit code tests:
+```bash
+dotnet test src/BitCheck.sln --filter "FullyQualifiedName~ExitCodeTests"
+```
+
 Run specific test method:
 ```bash
 dotnet test src/BitCheck.sln --filter "FullyQualifiedName~DatabaseService_InsertFileEntry_AddsNewEntry"
@@ -53,7 +69,21 @@ dotnet test src/BitCheck.sln --filter "FullyQualifiedName~DatabaseService_Insert
 
 ## Test Coverage
 
-### BitCheck Application Tests (29 tests)
+### BitCheck Application Tests (51 tests)
+- **Exit Code Tests (22 tests)**
+  - Successful operations return exit code 0
+  - Validation errors return exit code 1
+  - Check with mismatches returns exit code 1
+  - Check with missing files returns exit code 1
+  - Update that fixes mismatches returns exit code 0
+  - Update that removes missing files returns exit code 0
+  - Invalid operation combinations return exit code 1
+  - List mode returns exit code 0
+  - Single file mode exit codes
+  - Recursive mode exit codes
+  - Delete mode exit codes
+  - Info mode exit codes
+  - Timestamp mode exit codes
 - **Application Logic**
   - Recursive vs non-recursive directory processing
   - Add/update/check operations
@@ -280,6 +310,23 @@ Tests use temporary files in the system temp directory:
 - Created with `Path.GetTempPath()` + unique GUID
 - Automatically cleaned up in `[TestCleanup]`
 - No test artifacts left behind
+
+## Exit Code Testing
+
+BitCheck returns proper exit codes following CLI conventions:
+- **Exit code 0**: Success (no errors or all issues resolved)
+- **Exit code 1**: Errors (validation failures, unresolved mismatches, missing files, exceptions)
+
+The `ExitCodeTests` suite validates:
+- Successful operations return 0
+- Validation errors (invalid arguments) return 1
+- Integrity check failures return 1
+- Update operations that fix all issues return 0
+- All operation modes (add, check, update, delete, info, list) return correct codes
+
+The `ApplicationTestBase` class provides two helper methods:
+- `RunApp()` - Runs the application without capturing exit code (for existing tests)
+- `RunAppWithExitCode()` - Runs the application and returns the exit code (for exit code tests)
 
 ## Known Limitations
 
