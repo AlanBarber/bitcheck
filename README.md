@@ -92,7 +92,28 @@ This makes BitCheck practical for real-world use where files are frequently edit
 - `-d, --delete` - Delete a file record from the database (only valid with `--file`)
 - `-i, --info` - Show database information for a single file (only valid with `--file`)
 - `-l, --list` - List all files tracked in the database
+- `--ignore-pattern <pattern>` - Glob pattern to ignore (repeatable); combines with any `.bitcheckignore` files found while scanning
 - `--help` - Show help information
+
+## Ignoring Files
+
+BitCheck can skip files and directories that don't need integrity tracking, such as parity files or build artifacts. There are two ways to specify what to ignore:
+
+- **`.bitcheckignore` file** - Place a `.bitcheckignore` file in any directory to ignore matching entries in that directory (and, in `--recursive` mode, its subdirectories). One pattern per line.
+- **`--ignore-pattern <pattern>`** - Pass patterns directly on the command line (repeatable) to apply the same rules without a file.
+
+```
+# .bitcheckignore
+*.par2
+*.tmp
+!keep.tmp
+```
+
+- Blank lines and lines starting with `#` are ignored.
+- Patterns support `*` (any characters) and `?` (single character) wildcards, and are matched against the file or directory **name only** (not the full path).
+- A line starting with `!` re-includes a name that an earlier pattern excluded.
+- In `--recursive` mode, a `.bitcheckignore` in a subdirectory is combined with its parent directories' rules, with the subdirectory's own rules taking precedence — so a nested `.bitcheckignore` can override an inherited ignore rule for files in that subdirectory.
+- `--file` (single-file mode) always processes the file you specify, even if it matches an ignore pattern.
 
 ## Usage Examples
 

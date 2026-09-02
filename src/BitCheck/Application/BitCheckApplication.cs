@@ -12,6 +12,7 @@ namespace BitCheck.Application
         private readonly ProcessingStats _stats = new();
         private readonly CancellationTokenSource _cts = new();
         private string? _lastPrintedDirectory;
+        private readonly IgnoreRuleSet _baseIgnoreRules;
 
         /// <summary>
         /// Initializes a new instance of the BitCheckApplication class.
@@ -20,6 +21,7 @@ namespace BitCheck.Application
         public BitCheckApplication(AppOptions options)
         {
             _options = options;
+            _baseIgnoreRules = IgnoreRuleSet.Parse(options.IgnorePatterns);
         }
 
         /// <summary>
@@ -508,7 +510,7 @@ namespace BitCheck.Application
                 }
 
                 using var db = new DatabaseService(dbPath);
-                ProcessDirectory(fullRootPath, fullRootPath, db);
+                ProcessDirectory(fullRootPath, fullRootPath, db, _baseIgnoreRules);
 
                 if (!_cts.IsCancellationRequested && (_options.Check || _options.Update))
                 {
@@ -519,7 +521,7 @@ namespace BitCheck.Application
             }
             else
             {
-                ProcessDirectory(fullRootPath, fullRootPath, null);
+                ProcessDirectory(fullRootPath, fullRootPath, null, _baseIgnoreRules);
             }
         }
 
@@ -529,7 +531,8 @@ namespace BitCheck.Application
         /// <param name="rootPath">The root path for relative key calculations.</param>
         /// <param name="currentPath">The current directory being processed.</param>
         /// <param name="sharedDatabase">An optional shared database instance.</param>
-        private void ProcessDirectory(string rootPath, string currentPath, IDatabaseService? sharedDatabase)
+        /// <param name="inheritedIgnoreRules">Ignore rules inherited from ancestor directories and CLI patterns.</param>
+        private void ProcessDirectory(string rootPath, string currentPath, IDatabaseService? sharedDatabase, IgnoreRuleSet inheritedIgnoreRules)
         {
             var fullPath = Path.GetFullPath(currentPath);
             if (_options.Verbose)
@@ -537,7 +540,10 @@ namespace BitCheck.Application
                 Console.WriteLine($"Processing: {fullPath}");
             }
 
-            var files = FileSystemUtilities.GetEligibleFiles(fullPath);
+            var ignoreRules = IgnoreRuleSet.Combine(inheritedIgnoreRules, IgnoreRuleSet.Load(fullPath));
+            var files = FileSystemUtilities.GetEligibleFiles(fullPath)
+                .Where(f => !ignoreRules.IsIgnored(Path.GetFileName(f)))
+                .ToArray();
             var database = sharedDatabase ?? CreateDatabase(fullPath);
             var ownsDatabase = sharedDatabase is null;
             var useRelativePaths = sharedDatabase != null && _options.SingleDatabase;
@@ -579,14 +585,15 @@ namespace BitCheck.Application
 
             if (_options.Recursive && !_cts.IsCancellationRequested)
             {
-                foreach (var subdir in FileSystemUtilities.GetEligibleDirectories(fullPath))
+                foreach (var subdir in FileSystemUtilities.GetEligibleDirectories(fullPath)
+                    .Where(d => !ignoreRules.IsIgnored(Path.GetFileName(d))))
                 {
                     if (_cts.IsCancellationRequested)
                     {
                         break;
                     }
 
-                    ProcessDirectory(rootPath, subdir, sharedDatabase);
+                    ProcessDirectory(rootPath, subdir, sharedDatabase, ignoreRules);
                 }
             }
         }
