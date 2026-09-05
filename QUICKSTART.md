@@ -127,6 +127,9 @@ BitCheck --file myfile.txt --info     # Show file status
 BitCheck --list                       # Current directory
 BitCheck --list --recursive           # All directories
 BitCheck --list --single-db           # Single database mode
+
+# Ignore parity/temp files (via .bitcheckignore or inline patterns)
+BitCheck --add --recursive --ignore-pattern *.par2 --ignore-pattern *.tmp
 ```
 
 ## What Gets Created
@@ -226,6 +229,7 @@ BitCheck --add --recursive
 9. **Use `--delete` to clean up** - Remove obsolete entries from database without deleting actual files
 10. **Use `--info` to check status** - See if a file is tracked and its database details
 11. **Use `--list` to audit** - See all files currently tracked in the database
+12. **Use `--ignore-pattern` or `.bitcheckignore`** - Skip parity files, temp files, or other clutter from tracking
 
 ## Help
 

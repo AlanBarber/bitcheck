@@ -38,6 +38,7 @@ namespace BitCheck
         private static Option<bool> _deleteOption = null!;
         private static Option<bool> _infoOption = null!;
         private static Option<bool> _listOption = null!;
+        private static Option<string[]> _ignorePatternOption = null!;
 
         /// <summary>
         /// Builds the root System.CommandLine command that drives BitCheck.
@@ -68,6 +69,10 @@ namespace BitCheck
             _infoOption.AddAlias("-i");
             _listOption = new Option<bool>("--list", "List all files tracked in the database");
             _listOption.AddAlias("-l");
+            _ignorePatternOption = new Option<string[]>("--ignore-pattern", "Glob pattern to ignore (repeatable); combines with any .bitcheckignore files found while scanning")
+            {
+                AllowMultipleArgumentsPerToken = true
+            };
 
             var rootCommand = new RootCommand
             {
@@ -82,7 +87,8 @@ namespace BitCheck
                 _fileOption,
                 _deleteOption,
                 _infoOption,
-                _listOption
+                _listOption,
+                _ignorePatternOption
             };
 
             rootCommand.Description = @"
@@ -121,7 +127,8 @@ namespace BitCheck
                 context.ParseResult.GetValueForOption(_fileOption),
                 context.ParseResult.GetValueForOption(_deleteOption),
                 context.ParseResult.GetValueForOption(_infoOption),
-                context.ParseResult.GetValueForOption(_listOption));
+                context.ParseResult.GetValueForOption(_listOption),
+                context.ParseResult.GetValueForOption(_ignorePatternOption) ?? Array.Empty<string>());
 
             return new BitCheckApplication(options).Run();
         }
